@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { cheDoKhach } from "@/lib/che-do";
 import { getServerSupabase } from "@/lib/supabase/server";
@@ -8,21 +7,12 @@ import { rowToInput, type LaSoRow } from "@/lib/la-so-io";
 
 export default async function TrangLaSo({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const khach = cheDoKhach();
 
-  return (
-    <main className="mx-auto max-w-[1180px] px-4 py-8">
-      <Link href="/la-so" className="no-print mb-4 inline-block text-sm text-ink-400 underline">
-        ← Lá số của tôi
-      </Link>
-      {cheDoKhach() ? <LaSoCucBo id={id} /> : <LaSoSupabase id={id} />}
-    </main>
-  );
-}
+  if (khach) return <LaSoCucBo id={id} />;
 
-async function LaSoSupabase({ id }: { id: string }) {
   const supabase = await getServerSupabase();
   if (!supabase) redirect("/la-so/moi");
-
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 

@@ -19,18 +19,18 @@ export function LaSoCucBo({ id }: { id: string }) {
     setTt(row ? { loai: "co", input: rowToInput(row) } : { loai: "khong_thay" });
   }, [id]);
 
-  if (tt.loai === "dang_tai") return <p className="text-ink-400">Đang tải…</p>;
+  if (tt.loai === "dang_tai") return <p className="text-ink-dim">Đang tải…</p>;
 
   if (tt.loai === "khong_thay") {
     return (
-      <div className="rounded-xl border border-white/10 bg-ink-800/60 p-6">
-        <p className="text-ink-200">
+      <div className="glass rounded-2xl p-6">
+        <p className="text-ink">
           Không tìm thấy lá số này trong trình duyệt hiện tại.
         </p>
-        <p className="mt-2 text-sm text-ink-400">
+        <p className="mt-2 text-sm text-ink-dim">
           Ở chế độ khách, lá số chỉ nằm trên máy đã tạo ra nó.
         </p>
-        <Link href="/la-so" className="mt-4 inline-block text-accent underline">
+        <Link href="/la-so" className="mt-4 inline-block text-cyan underline underline-offset-2">
           ← Về danh sách
         </Link>
       </div>

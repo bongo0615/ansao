@@ -6,3 +6,6 @@ next-env.d.ts
 
 # Lá số HTML tĩnh sinh bởi ./dev.sh xuat
 la-so-mau.html
+
+# Bản xem trước sinh bởi scripts/xuat-trang.mjs
+xem-truoc-*.html

@@ -1,7 +1,8 @@
 # An Sao — Lập lá số Tử Vi (trường phái Ảo Bí)
 
-Ứng dụng web tiếng Việt lập **lá số Tử Vi** từ ngày–giờ–nơi sinh, theo đúng
-quy tắc an sao của trường phái Ảo Bí. Lá số sinh ra để **chuyên gia luận giải**.
+Ứng dụng web tiếng Việt lập **lá số Tử Vi** từ ngày–giờ–nơi sinh theo đúng quy
+tắc an sao của trường phái Ảo Bí, rồi cho người dùng **trò chuyện với chuyên gia
+luận giải AI** đọc đúng lá số đó.
 
 ## Nguồn quy tắc
 
@@ -53,7 +54,10 @@ src/lib/tuvi/     engine thuần TypeScript, không phụ thuộc React/DB
   tables.ts       bảng tra an sao (Lộc Tồn, Khôi–Việt, Tứ Hoá, Triệt…)
   engine.ts       anSao() — an đủ 4 tầng, trả về LaSo
   noi-sinh.ts     danh mục nơi sinh → IANA time zone
-src/components/laso/   OCung (6 zone) · InputPanel · LaSoView · LaSoWorkspace
+src/lib/ai/       system prompt + tuần tự hoá lá số cho LLM
+src/components/laso/     OCung (6 zone) · InputPanel · LaSoView · LaSoWorkspace · TheLaSo
+src/components/chat/     KhungChat (SSE) · Markdown (tự viết, không dangerouslySetInnerHTML)
+src/components/graphics/ ThienBan · VongNguHanh · Logo · StarField — SVG thuần
 src/styles/la-so.css   port nguyên trạng CSS mockup v10, scope vào .la-so-root
 src/app/          Next.js App Router (trang chủ, đăng nhập, danh sách, lá số)
 supabase/migrations/   schema + RLS
@@ -62,6 +66,53 @@ tests/            2 test case acceptance bắt buộc + đối chiếu 60 hoa gi
 
 Lá số **không** được lưu vào DB — chỉ lưu input (bát tự + nơi sinh). Engine là
 nguồn chân lý, lá số luôn tính lại nên khi quy tắc đổi, mọi lá số cũ tự đúng theo.
+
+## Chuyên gia luận giải (AI)
+
+Khung chat bên phải lá số nói chuyện với **Claude Opus 5** đóng vai chuyên gia Tử
+Vi trường phái Ảo Bí.
+
+**Kiến trúc — điểm quan trọng nhất:** model **không bao giờ tự an sao**. Engine
+tính lá số, `src/lib/ai/serialize.ts` tuần tự hoá thành văn bản có cấu trúc (kèm
+sẵn tam hợp / xung chiếu / nhị hợp để model khỏi phải tự suy), rồi nạp vào system
+prompt như **dữ kiện**. Model chỉ luận. Nhờ vậy mọi câu trả lời truy ngược được
+về cung và sao cụ thể, và chuyên gia người thật kiểm chứng được.
+
+| Tệp | Vai trò |
+|---|---|
+| `src/lib/ai/system-prompt.ts` | **Tài sản tri thức lõi** — vai trò, đặc thù Ảo Bí, khung luận giải, ranh giới đạo đức, văn phong |
+| `src/lib/ai/serialize.ts` | Lá số → văn bản cho model |
+| `src/app/api/chat/route.ts` | Route streaming (SSE) |
+
+Chi tiết đáng lưu ý:
+
+- **Lá số lấy từ server, không tin client.** Client chỉ gửi `laSoId` + lịch sử
+  chat; server đọc lá số từ CSDL (RLS chặn cross-tenant) rồi mới dựng prompt.
+  Không thể hỏi về lá số của người khác.
+- **Prompt caching**: khối tri thức bất biến đặt trước và bật `cache_control`,
+  khối lá số đặt sau — lượt thứ hai trở đi chỉ trả ~10% giá cho phần tri thức.
+- **Ranh giới đạo đức** nằm trong prompt: không chẩn đoán bệnh, không tiên đoán
+  cái chết, không tư vấn đầu tư/pháp lý như điều chắc chắn, luôn nhấn mạnh lá số
+  là khuynh hướng chứ không phải bản án.
+- Thiếu `ANTHROPIC_API_KEY` → API trả 503 và khung chat báo tắt; phần lập lá số
+  vẫn chạy bình thường.
+
+## Giao diện
+
+- **Trang chủ** — hero với **Thiên Bàn**: ba vòng can chi quay ngược chiều nhau
+  bao quanh khung la võng 4×4. SVG thuần, không ảnh, không thư viện đồ hoạ.
+- **Quản lý lá số** — lưới thẻ (tile card), mỗi thẻ có **mini la võng** tô theo
+  ngũ hành nạp âm 12 cung của chính lá số đó nên nhận ra nhau bằng mắt.
+- **Màn làm việc** — lá số bên trái, chuyên gia bên phải; màn hẹp chuyển thành tab.
+- Bảng màu ngũ hành của lá số được dùng làm nền tảng cho cả app, nên phần vỏ và
+  phần lá số không đá màu nhau. Chữ: Playfair Display + Be Vietnam Pro (cả hai
+  đều có subset tiếng Việt đủ dấu).
+
+Xem nhanh không cần chạy app:
+
+```bash
+node scripts/xuat-trang.mjs http://localhost:3000/ trang-chu.html
+```
 
 ## Chạy dự án
 
@@ -126,6 +177,43 @@ npm test        # 99 test
   hai: case #2 bắt được lỗi thiếu hệ số A mà case #1 che khuất.
 - `tests/napam.test.ts` — đối chiếu **60/60** Lục Thập Hoa Giáp với V5 Define
   Bảng 4 (ngũ hành nạp âm + khí Trường Sinh).
+
+## Đối chiếu lá số mẫu (`260720 Lá số mẫu (1).xlsx`)
+
+Bộ mẫu có 8 lá số phủ đủ ma trận **(can năm ±) × (nam/nữ) × (Mệnh ở cung ±)** —
+tức toàn bộ tổ hợp hệ số A và B. Đây là kiểm chứng độc lập mạnh nhất cho engine.
+
+**Khớp 100%:** đổi âm lịch (8/8) · can chi năm/tháng/ngày/giờ · âm dương giới
+tính & thuận-nghịch lý (8/8) · vị trí Mệnh, Thân, Cục (8/8) · can chi 12 cung
+(96/96) · tên 12 cung chức · cung chức Đại Vận · cung chức Lưu Niên · vòng
+Trường Sinh · Tuần · 14 chính tinh · vòng Lộc Tồn · vòng Thái Tuế · Kình-Đà ·
+Không-Kiếp · Tả-Hữu · Xương-Khúc · Khôi-Việt · Thai-Toạ · Quang-Quý ·
+Quan-Phúc · Cô-Quả · Khốc-Hư · Hình-Diêu · Hồng-Hỉ-Long-Phượng · sao tầng ĐV ·
+sao tầng Lưu Nguyệt. Khoảng **143/154 vị trí sao mỗi lá số**.
+
+**3 nhóm lệch — đều do mẫu (20/07) CŨ HƠN TechDoc (bản 30/07):**
+
+| # | Mục | Mẫu | App (theo TechDoc) |
+|---|---|---|---|
+| 1 | Hoả Tinh / Linh Tinh | bảng **truyền thống** (16/16) | bảng riêng Ảo Bí, TechDoc 1.14 ghi rõ "(≠TT, đã chốt)" |
+| 2 | Triệt | bảng **truyền thống** (7/8) | bảng lookup TechDoc 1.25, ghi rõ "(≠TT, Ất và Canh tách riêng)" |
+| 3 | Vòng L.Tướng Tinh | không gian **chi nguyên thuỷ** (cả 8 lá số đều khởi ở Ngọ = chi năm xem 2026) | không gian **LƯU CHI** — TechDoc 2.2.3 "chốt 30/07, GHI ĐÈ ghi chú *chi nguyên thuỷ* trong sheet Sao Lưu niên" |
+
+Dấu hiệu khác cho thấy mẫu cũ hơn: còn **Đài Phụ, Phong Cáo** (TechDoc 1.24 đã
+loại khỏi trường phái), có **Quốc Ấn, Đường Phù** (không nằm trong 97 sao),
+dùng tên **"Bác Sĩ"** (TechDoc 1.6 đổi thành "Lộc Tồn") và **"TỬ TỨC"**
+(TechDoc chốt "TỬ TÔN"), và **thiếu Thiên Trù** (thêm 30/07).
+
+> ⚠️ Ba điểm lệch trên là **quyết định nghiệp vụ, không phải lỗi code**. Engine
+> đang theo TechDoc — nguồn chân lý được chỉ định. Cần Nhã xác nhận: bảng
+> Hoả-Linh và Triệt lấy theo TechDoc hay theo mẫu?
+
+Chạy lại đối chiếu bất cứ lúc nào:
+
+```bash
+node scripts/xuat-la-so.mjs …          # xuất HTML để soi mắt thường
+npx vitest run tests/la-so-mau.test.ts # 25 test khoá phần đã khớp
+```
 
 ## Ghi chú kỹ thuật đáng lưu ý
 

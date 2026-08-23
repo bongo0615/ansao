@@ -2,28 +2,133 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,700&family=Montserrat:wght@700;900&display=swap");
+/* Playfair Display: serif hiển thị, có subset vietnamese đầy đủ dấu.
+   Be Vietnam Pro: font thân, thiết kế riêng cho tiếng Việt. */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&display=swap");
 
-html,
-body {
+:root {
+  /* Nền — tông "đêm sao", sâu dần vào trong */
+  --void: #08080c;
+  --night: #0e0e15;
+  --surface: #16161f;
+  --surface-2: #1e1e2a;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  /* Chữ */
+  --ink: #f2f0ee;
+  --ink-dim: #a8a3b5;
+  --ink-faint: #6b6779;
+
+  /* Ngũ hành — cùng palette với lá số (Design Spec §5.1.1) */
+  --kim: #8800ff;
+  --hoa: #ff4400;
+  --moc: #60cd00;
+  --thuy: #2a78ff;
+  --tho: #ff964b;
+
+  /* Nhấn */
+  --gold: #e5c07b;
+  --cyan: #bef1ff;
+}
+
+* { border-color: var(--line); }
+
+html, body {
   height: 100%;
-  background: #0d0d0f;
-  color: #f8fafc;
-  /* Be Vietnam Pro: font Việt hoá đầy đủ dấu, dùng chung với lá số */
+  background: var(--void);
+  color: var(--ink);
   font-family: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, h4 {
-  font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.02em;
+h1, h2, h3, .font-display {
+  font-family: "Playfair Display", ui-serif, Georgia, serif;
+  letter-spacing: -0.015em;
 }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.20); }
 ::-webkit-scrollbar-track { background: transparent; }
+
+::selection { background: rgba(136, 0, 255, 0.35); color: #fff; }
+
+@layer components {
+  /* Nền huyền ảo: hai quầng sáng ngũ hành rất mờ, đặt sau nội dung */
+  .aurora { position: relative; isolation: isolate; }
+  .aurora::before {
+    content: "";
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    height: 560px;
+    z-index: -1;
+    background:
+      radial-gradient(48% 60% at 22% 22%, rgba(136, 0, 255, 0.20), transparent 70%),
+      radial-gradient(46% 56% at 78% 12%, rgba(42, 120, 255, 0.16), transparent 70%);
+    filter: blur(20px);
+    pointer-events: none;
+  }
+
+  /* Thẻ mặt kính — dùng cho tile card, panel */
+  .glass {
+    background: linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+    border: 1px solid var(--line);
+    backdrop-filter: blur(12px);
+  }
+
+  /* Viền sáng chạy quanh khi hover — tạo cảm giác "sống" */
+  .glow-border { position: relative; }
+  .glow-border::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--kim), var(--thuy), transparent 60%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 280ms ease;
+    pointer-events: none;
+  }
+  .glow-border:hover::after { opacity: 1; }
+
+  .text-gradient {
+    background: linear-gradient(100deg, var(--ink) 20%, var(--cyan) 55%, var(--kim) 92%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Gạch chân mảnh dùng cho nhãn mục */
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+}
+
+/* Chuyển động — tôn trọng người dùng tắt hiệu ứng */
+@keyframes quay-thuan { to { transform: rotate(360deg); } }
+@keyframes quay-nghich { to { transform: rotate(-360deg); } }
+@keyframes tho-sang { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+@keyframes noi-len { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes go-chu { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+.anim-noi-len { animation: noi-len 620ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 @media print {
   .no-print { display: none !important; }

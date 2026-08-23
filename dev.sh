@@ -90,6 +90,9 @@ fi
 CHE_DO_KHACH=0
 grep -qE '^NEXT_PUBLIC_CHE_DO_KHACH=1' .env.local && CHE_DO_KHACH=1
 
+CO_AI=0
+grep -qE '^ANTHROPIC_API_KEY=.+' .env.local && CO_AI=1
+
 # ── Các lệnh phụ ─────────────────────────────────────────────────────────────
 case "$LENH" in
     test)
@@ -157,6 +160,12 @@ else
     echo -e "  Supabase       ${YELLOW}chưa cấu hình${NC} — không lưu được lá số"
     echo -e "  ${DIM}Điền key vào .env.local, hoặc đặt NEXT_PUBLIC_CHE_DO_KHACH=1${NC}"
     echo -e "  ${DIM}để test không cần đăng nhập.${NC}"
+fi
+if [ "$CO_AI" = "1" ]; then
+    echo -e "  Luận giải AI   ${GREEN}sẵn sàng${NC} (Claude Opus 5)"
+else
+    echo -e "  Luận giải AI   ${YELLOW}tắt${NC} — thiếu ANTHROPIC_API_KEY trong .env.local"
+    echo -e "  ${DIM}Lấy key tại https://console.anthropic.com/settings/keys${NC}"
 fi
 echo -e "${DIM}────────────────────────────────────────────${NC}"
 echo -e "${DIM}Ctrl+C để dừng.${NC}"

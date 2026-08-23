@@ -3,13 +3,15 @@
 /**
  * Khung lá số 4×4 + Input Panel ở giữa — Design Spec §3, §6, §8.
  *
- * Khung gốc 1080×1824px cố định (ngân sách chiều cao từng ô đã cân theo
- * spec); trên màn hẹp dùng `zoom` để thu vừa bề rộng thay vì phá layout.
+ * Khung gốc 1080×1824px cố định (ngân sách chiều cao từng ô đã cân theo spec),
+ * nên không co giãn bằng layout mà bằng `zoom`. Ba chế độ xem:
+ *   - `cao`   vừa chiều cao khung nhìn — thấy trọn lá số, không phải cuộn
+ *   - `ngang` vừa bề ngang cột — chữ to nhất có thể, cuộn dọc
+ *   - số      phần trăm do người dùng chọn
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { anSao, type AnSaoInput } from "@/lib/tuvi/engine";
-import { CHI_POS } from "@/lib/tuvi/constants";
 import type { LaSo } from "@/lib/tuvi/types";
 import { OCung } from "./OCung";
 import { InputPanel } from "./InputPanel";
@@ -22,45 +24,53 @@ const GRID: Record<number, [number, number]> = {
   9: [4, 3], 10: [4, 4], 11: [3, 4], 12: [2, 4],
 };
 
-const FRAME_W = 1080;
+const KHUNG_W = 1080;
+const KHUNG_H = 1824;
 
-export type LaSoFormState = AnSaoInput;
+export type CheDoXem = "cao" | "ngang" | number;
 
 export function LaSoView({
-  value,
-  onChange,
-  readOnly = false,
-  theme = "dark",
+  value, onChange, readOnly = false, theme = "dark", cheDo = "cao", onZoom,
 }: {
-  value: LaSoFormState;
-  onChange?: (next: LaSoFormState) => void;
+  value: AnSaoInput;
+  onChange?: (next: AnSaoInput) => void;
   readOnly?: boolean;
   theme?: "dark" | "light";
+  cheDo?: CheDoXem;
+  /** Báo ngược tỉ lệ thực tế để thanh công cụ hiển thị đúng phần trăm. */
+  onZoom?: (z: number) => void;
 }) {
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(0.5);
   const boxRef = useRef<HTMLDivElement>(null);
 
   const { laSo, loi } = useMemo(() => {
-    try {
-      return { laSo: anSao(value) as LaSo | null, loi: null as string | null };
-    } catch (e) {
-      return { laSo: null, loi: (e as Error).message };
-    }
+    try { return { laSo: anSao(value) as LaSo | null, loi: null as string | null }; }
+    catch (e) { return { laSo: null, loi: (e as Error).message }; }
   }, [value]);
 
   useEffect(() => {
     const el = boxRef.current;
     if (!el) return;
-    const fit = () => setZoom(Math.min(1, el.clientWidth / FRAME_W));
-    fit();
-    const ro = new ResizeObserver(fit);
+    const tinh = () => {
+      if (typeof cheDo === "number") return setZoom(cheDo);
+      if (cheDo === "ngang") return setZoom(Math.min(1, el.clientWidth / KHUNG_W));
+      // "cao": trừ khoảng hở trên/dưới để lá số không dính mép khung nhìn.
+      const cao = el.getBoundingClientRect().top;
+      const con = Math.max(320, window.innerHeight - cao - 24);
+      setZoom(Math.min(1, con / KHUNG_H, el.clientWidth / KHUNG_W));
+    };
+    tinh();
+    const ro = new ResizeObserver(tinh);
     ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+    window.addEventListener("resize", tinh);
+    return () => { ro.disconnect(); window.removeEventListener("resize", tinh); };
+  }, [cheDo]);
+
+  useEffect(() => { onZoom?.(zoom); }, [zoom, onZoom]);
 
   if (loi || !laSo) {
     return (
-      <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-6 text-red-200">
+      <div className="rounded-xl border border-hanh-hoa/40 bg-hanh-hoa/10 p-6 text-hanh-hoa">
         <p className="font-medium">Không lập được lá số</p>
         <p className="mt-1 text-sm opacity-80">{loi}</p>
       </div>
@@ -76,17 +86,10 @@ export function LaSoView({
             return <OCung key={c.index} c={c} col={col} row={row} />;
           })}
           <div className="panel-cell">
-            <InputPanel
-              laSo={laSo}
-              value={value}
-              onChange={onChange}
-              readOnly={readOnly}
-            />
+            <InputPanel laSo={laSo} value={value} onChange={onChange} readOnly={readOnly} />
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-export { CHI_POS };
