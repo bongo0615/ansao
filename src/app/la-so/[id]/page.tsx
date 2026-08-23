@@ -20,5 +20,14 @@ export default async function TrangLaSo({ params }: { params: Promise<{ id: stri
   const { data } = await supabase.from("la_so").select("*").eq("id", id).maybeSingle();
   if (!data) notFound();
 
-  return <LaSoWorkspace banDau={rowToInput(data as LaSoRow)} id={id} noiLuu="supabase" />;
+  const hoSo = (await supabase.from("profiles").select("ho_ten").eq("id", user.id).maybeSingle()).data;
+
+  return (
+    <LaSoWorkspace
+      banDau={rowToInput(data as LaSoRow)}
+      id={id}
+      noiLuu="supabase"
+      nguoiDung={{ email: user.email ?? "", hoTen: hoSo?.ho_ten ?? null }}
+    />
+  );
 }

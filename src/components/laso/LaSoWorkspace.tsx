@@ -24,8 +24,11 @@ type Tab = "la-so" | "luan-giai";
 
 const KHOA_CHE_DO = "ansao.che-do-xem";
 
-export function LaSoWorkspace({ banDau, id, noiLuu }: {
-  banDau: AnSaoInput; id?: string; noiLuu: NoiLuu;
+export function LaSoWorkspace({ banDau, id, noiLuu, nguoiDung }: {
+  banDau: AnSaoInput;
+  id?: string;
+  noiLuu: NoiLuu;
+  nguoiDung?: { email: string; hoTen: string | null } | null;
 }) {
   const router = useRouter();
   const [value, setValue] = useState<AnSaoInput>(banDau);
@@ -141,6 +144,7 @@ export function LaSoWorkspace({ banDau, id, noiLuu }: {
         onXoa={id ? xoa : undefined} coTheLuu={coTheLuu}
         duongVe={{ href: coTheLuu ? "/la-so" : "/", nhan: coTheLuu ? "Lá số của tôi" : "Trang chủ" }}
         tin={tin}
+        nguoiDung={nguoiDung}
       />
 
 

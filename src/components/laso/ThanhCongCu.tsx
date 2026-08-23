@@ -12,6 +12,7 @@ import {
   IBaCham, IChevron, ICong, IIn, IMatTrang, IMatTroi, IMuiTenTrai, IThuNho, IThung, ITru,
 } from "@/components/ui/Icon";
 import { ChuongThongBao, type Tin } from "@/components/ui/ThongBao";
+import { MenuNguoiDung } from "@/components/site/MenuNguoiDung";
 import type { CheDoXem } from "./LaSoView";
 
 const MUC_ZOOM: { gt: CheDoXem; nhan: string; phu?: string }[] = [
@@ -26,7 +27,7 @@ const BUOC = [0.3, 0.4, 0.5, 0.6, 0.75, 0.9, 1];
 
 export function ThanhCongCu({
   ten, phu, cheDo, zoom, doiCheDo, theme, doiTheme, tab, doiTab,
-  trangThaiLuu, onLuu, onXoa, coTheLuu, duongVe, tin,
+  trangThaiLuu, onLuu, onXoa, coTheLuu, duongVe, tin, nguoiDung,
 }: {
   ten: string;
   phu: string;
@@ -43,6 +44,7 @@ export function ThanhCongCu({
   coTheLuu: boolean;
   duongVe: { href: string; nhan: string };
   tin: Tin[];
+  nguoiDung?: { email: string; hoTen: string | null } | null;
 }) {
   const buocZoom = (huong: 1 | -1) => {
     const gan = BUOC.reduce((a, b) => (Math.abs(b - zoom) < Math.abs(a - zoom) ? b : a));
@@ -160,6 +162,12 @@ export function ThanhCongCu({
             {{ chua_luu: "Lưu", dang_luu: "Đang lưu…", da_luu: "Đã lưu", loi: "Thử lại" }[
               trangThaiLuu ?? "chua_luu"] ?? "Lưu"}
           </button>
+        )}
+
+        {nguoiDung && (
+          <span className="ml-0.5">
+            <MenuNguoiDung email={nguoiDung.email} hoTen={nguoiDung.hoTen} gonNhe />
+          </span>
         )}
       </div>
     </header>

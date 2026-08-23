@@ -17,12 +17,17 @@ function macDinh(): AnSaoInput {
 export default async function TrangLaSoMoi() {
   const khach = cheDoKhach();
   let noiLuu: NoiLuu = "khong";
+  let nguoiDung: { email: string; hoTen: string | null } | null = null;
   if (khach) {
     noiLuu = "cuc_bo";
   } else {
     const supabase = await getServerSupabase();
     const { data } = (await supabase?.auth.getUser()) ?? { data: { user: null } };
-    if (data?.user) noiLuu = "supabase";
+    if (data?.user) {
+      noiLuu = "supabase";
+      const hoSo = (await supabase!.from("profiles").select("ho_ten").eq("id", data.user.id).maybeSingle()).data;
+      nguoiDung = { email: data.user.email ?? "", hoTen: hoSo?.ho_ten ?? null };
+    }
   }
-  return <LaSoWorkspace banDau={macDinh()} noiLuu={noiLuu} />;
+  return <LaSoWorkspace banDau={macDinh()} noiLuu={noiLuu} nguoiDung={nguoiDung} />;
 }

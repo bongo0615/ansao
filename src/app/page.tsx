@@ -27,10 +27,14 @@ export default async function TrangChu() {
   const supabase = khach ? null : await getServerSupabase();
   const { data } = (await supabase?.auth.getUser()) ?? { data: { user: null } };
   const daDangNhap = Boolean(data?.user);
+  const hoSo = daDangNhap
+    ? (await supabase!.from("profiles").select("ho_ten").eq("id", data!.user!.id).maybeSingle()).data
+    : null;
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header daDangNhap={daDangNhap} khach={khach} />
+      <Header daDangNhap={daDangNhap} khach={khach}
+              email={data?.user?.email ?? ""} hoTen={hoSo?.ho_ten ?? null} />
 
       {/* ---------- Hero ---------- */}
       <section className="aurora relative overflow-hidden">

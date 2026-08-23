@@ -14,20 +14,24 @@ export default async function TrangDanhSach() {
   const khach = cheDoKhach();
   let rows: LaSoRow[] = [];
   let loi: string | null = null;
+  let email = "";
+  let hoTen: string | null = null;
 
   if (!khach) {
     const supabase = await getServerSupabase();
     if (!supabase) redirect("/la-so/moi");
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) redirect("/login");
+    email = user.email ?? "";
     const res = await supabase.from("la_so").select("*").order("updated_at", { ascending: false });
     rows = (res.data ?? []) as LaSoRow[];
     loi = res.error?.message ?? null;
+    hoTen = (await supabase.from("profiles").select("ho_ten").eq("id", user.id).maybeSingle()).data?.ho_ten ?? null;
   }
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header daDangNhap={!khach} khach={khach} />
+      <Header daDangNhap={!khach} khach={khach} email={email} hoTen={hoTen} />
 
       <main className="relative flex-1">
         <StarField seed={5} count={40} className="opacity-60" />
