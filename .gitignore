@@ -1,0 +1,8 @@
+node_modules
+.next
+.env*.local
+*.tsbuildinfo
+next-env.d.ts
+
+# Lá số HTML tĩnh sinh bởi ./dev.sh xuat
+la-so-mau.html

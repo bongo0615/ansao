@@ -1,0 +1,708 @@
+/**
+ * Lá số Tử Vi — stylesheet chuẩn thi công.
+ *
+ * Port nguyên trạng từ `VM_AnSao_Van_08041990.html` (mockup v10, bản chuẩn
+ * hiển thị) theo `VM_AnSao_UI_Design_Spec_v3.md` v3.2 + quy tắc chốt 30/07.
+ * ⚠️ Không sửa số đo ở đây nếu chưa cập nhật design spec — ngân sách chiều
+ * cao 456px/ô đã được cân đúng để khung 1080×1824 giữ tỉ lệ.
+ */
+
+.la-so-root {
+  /* Palette Ngũ Hành THỐNG NHẤT (chốt với Nhã 2026-07-03) — áp cho MỌI thông tin có
+     quy định ngũ hành trong tài liệu an sao: tên sao, lục thập hoa giáp/nạp âm, tứ hóa.
+     Hỏa và Thổ đổi hex ở Light mode (xem [data-theme="light"]). */
+  --kim: #8800FF;
+  --hoa: #FF4400;
+  --moc: #60CD00;
+  --thuy: #2A78FF;
+  --tho: #FF964B;
+
+  --napam-muted: #A7A7A7;
+
+  /* UI Colors - Dark Mode (mặc định) */
+  --text-primary: #FFFFFF;
+  --text-muted: #A7A7A7;
+  --bg-primary: #1C1C21;
+  --bg-panel: #121315;
+  --bg-highlight: #705B74;
+  --border-color: #FFFFFF;
+  --border-width: 1px;
+  --accent-cyan: #BEF1FF;
+
+  /* Marker Tự Hóa góc — đồng bộ palette ngũ hành thống nhất (Lộc-Kim, Quyền-Hỏa, Khoa-Mộc, Kỵ-Thủy) */
+  --marker-loc: var(--kim);
+  --marker-quyen: var(--hoa);
+  --marker-khoa: var(--moc);
+  --marker-ky: var(--thuy);
+
+  /* Màu Tứ Hóa = ngũ hành của hóa (Lộc-Kim, Quyền-Hỏa, Khoa-Mộc, Kỵ-Thủy) — tự đổi theo mode */
+  --tuhoa-loc: var(--kim);
+  --tuhoa-quyen: var(--hoa);
+  --tuhoa-khoa: var(--moc);
+  --tuhoa-ky: var(--thuy);
+
+  /* Fonts */
+  --font-header: 'iCiel Gotham', 'Montserrat', sans-serif;
+  --font-body: 'Be Vietnam Pro', sans-serif;
+  --font-cung-chuc: 'iCiel Gotham', 'Montserrat', sans-serif;
+  --font-chinh-tinh: 'Barlow', sans-serif;
+
+  /* Radius */
+  --radius-panel: 5px;
+  --radius-box: 10px;
+  --radius-full: 999px;
+}
+
+/* Light Mode override — theo figma_extract_lightmode.md mục 6 */
+.la-so-root[data-la-so-theme="light"] {
+  --text-primary: #474460;       /* label cấu trúc nhóm 1 */
+  --text-primary-alt: #547078;   /* label cấu trúc nhóm 2 (L.QUAN, T.Tháng) */
+  --bg-primary: #FFFFFF;
+  --bg-panel: #FFFFFF;
+  --border-color: #000000;
+  --border-width: 2px;
+  /* Palette ngũ hành light mode: chỉ Hỏa và Thổ đổi, Kim/Mộc/Thủy giữ nguyên */
+  --hoa: #D00000;
+  --tho: #A0703F;
+}
+
+
+
+
+.la-so-root[data-la-so-theme="light"] body {
+  background: #e8e8e8;
+}
+
+.la-so-wrapper {
+  display: flex;
+  justify-content: center;
+  /* Khung cố định 1080px: thu nhỏ bằng zoom (JS đo bề rộng khả dụng),
+     phần dư cuộn ngang thay vì tràn trang. */
+  overflow-x: auto;
+}
+
+.la-so-container {
+  width: 1080px;
+  height: 1824px; /* [30/07] rút 1 dòng/ô: 4x456 */
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  background: var(--bg-primary);
+  transition: background 0.2s ease;
+  /* border collapse: container vẽ 2 cạnh ngoài phải + dưới */
+  border-right: var(--border-width) solid var(--border-color);
+  border-bottom: var(--border-width) solid var(--border-color);
+}
+
+/* Responsive: viewport meta width=1080 lo việc fit mobile (Safari tự zoom khung
+   1080px vừa màn hình, giữ nguyên layout). Không dùng transform scale — không tin
+   cậy trên iOS và xung đột với zoom-fit. */
+
+
+/* ========================================
+   IN PDF / GIẤY A4 (dọc)
+   Khung 1080×1920 (9:16) cao hơn tỉ lệ A4 (1:1.414) → scale theo CHIỀU CAO:
+   vùng in A4 margin 8mm ≈ 733×1062px @96dpi → zoom = 1062/1824 ≈ 0.55
+   → khung in ra ≈ 594×1056px (157×279mm), lọt trọn 1 trang A4, căn giữa ngang.
+   In luôn dùng LIGHT MODE (nền trắng chữ tối) — in nền tối vừa tốn mực vừa bị
+   browser bỏ background mặc định làm chữ trắng tàng hình.
+======================================== */
+@media print {
+  @page { size: A4 portrait; margin: 8mm; }
+
+  /* In luôn dùng LIGHT MODE: in nền tối tốn mực và browser bỏ background
+     mặc định làm chữ trắng tàng hình. */
+  .la-so-root {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .la-so-root {
+    --text-primary: #474460;
+    --text-primary-alt: #547078;
+    --bg-primary: #FFFFFF;
+    --bg-panel: #FFFFFF;
+    --border-color: #000000;
+    --border-width: 1px; /* 1px đủ nét khi in, đỡ nặng khung */
+    --hoa: #D00000;
+    --tho: #A0703F;
+  }
+
+
+
+  .la-so-container {
+    zoom: var(--print-zoom, 0.55);
+  }
+}
+
+
+/* ========================================
+   Ô CUNG STYLES (270 × 480)
+======================================== */
+.cung {
+  position: relative;
+  /* border collapse: ô chỉ vẽ cạnh trên + trái, tránh double line giữa các ô */
+  border-top: var(--border-width) solid var(--border-color);
+  border-left: var(--border-width) solid var(--border-color);
+  padding: 0 10px; /* dọc 0 — các zone tự quản để khớp ngân sách 480px của Figma */
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* Zone 1: Header */
+.zone-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 33px; /* KHÓA chiều cao zone 1 — dashed line thẳng hàng tuyệt đối giữa 12 ô */
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--border-color);
+  margin-bottom: 0;
+}
+
+.cung-chuc {
+  font-family: var(--font-cung-chuc);
+  font-weight: 900;
+  font-size: 18px;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  white-space: nowrap; /* [TEST B] */
+}
+
+.tuan-triet-zone1 {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: capitalize;
+  text-align: center;
+  color: var(--hoa);
+}
+
+.can-chi-cung {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 500;
+  font-style: italic;
+  text-align: right;
+  /* màu theo ngũ hành nạp âm (lục thập hoa giáp) của can-chi cung — class c-* */
+  white-space: nowrap; /* [TEST B] */
+}
+
+/* Marker Mệnh/Thân: ★/☆ lấy từ font hệ thống có metrics cao hơn chữ 18px
+   → phải thu nhỏ + line-height 1 để không nống chiều cao dòng gây lệch dashed line */
+.menh-marker, .than-marker {
+  font-size: 14px;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: 1px;
+}
+.menh-marker { color: #FFD700; }
+.than-marker { color: #00FFFF; }
+
+/* Zone 2: Chính Tinh — layout mới v2.1: dia-vi trái xếp dọc, chinh-tinh phải căn phải */
+.zone-chinh-tinh {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 2px 0;
+  border-bottom: 1px dashed var(--border-color);
+  margin-bottom: 0;
+  min-height: 66px; /* cố định = case 2 chính tinh (ngân sách Figma 67px), kể cả Vô Chính Diệu */
+}
+
+.dia-vi-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding-top: 2px;
+}
+
+.dia-vi {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--accent-cyan);
+  white-space: nowrap;
+}
+
+.chinh-tinh-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: 1;
+}
+
+.chinh-tinh-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 0; /* nén khoảng cách giữa 2 dòng chính tinh */
+  width: 100%;
+}
+
+.chinh-tinh-name {
+  font-family: var(--font-chinh-tinh);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 29px; /* nén dòng (mặc định ~31px) */
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-align: right;
+  white-space: nowrap; /* [TEST B] */
+}
+
+.tu-hoa-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;      /* không bị flex bóp méo — vuông/tròn giữ đúng dạng */
+  aspect-ratio: 1;
+  font-size: 9px;
+  font-weight: bold;
+  color: #FFFFFF; /* chữ trắng trên nền đặc (theo Figma) */
+}
+
+/* [TEST B] Sao mang ĐỦ 4 icon Tứ Hoá -> icon thu nhỏ 12px (Zone 2 + Zone 3); <4 icon giữ 16px */
+.sao-name:has(> .tu-hoa-icon:nth-of-type(4)) > .tu-hoa-icon,
+.chinh-tinh-name:has(> .tu-hoa-icon:nth-of-type(4)) > .tu-hoa-icon {
+  width: 12px; height: 12px; font-size: 7px;
+}
+.sao-name:has(> .tu-hoa-icon:nth-of-type(4)) > .tu-hoa-dai-van,
+.chinh-tinh-name:has(> .tu-hoa-icon:nth-of-type(4)) > .tu-hoa-dai-van {
+  width: 13px; height: 13px; /* tròn giữ bù quang học */
+}
+.tu-hoa-icon.th-loc   { background: var(--tuhoa-loc); }
+.tu-hoa-icon.th-quyen { background: var(--tuhoa-quyen); }
+.tu-hoa-icon.th-khoa  { background: var(--tuhoa-khoa); }
+.tu-hoa-icon.th-ky    { background: var(--tuhoa-ky); }
+
+/* 4 shape = 4 tầng hóa */
+.tu-hoa-nguyen-cuc { border-radius: 0; }                         /* Tứ hóa nguyên thủy: vuông sắc cạnh */
+.tu-hoa-dai-van {
+  /* Tứ hóa đại vận: tròn tuyệt đối; 17px bù quang học (tròn cùng size trông nhỏ hơn vuông) */
+  width: 17px;
+  height: 17px;
+  border-radius: 999px;
+}
+.tu-hoa-luu-nien  { transform: rotate(45deg) scale(0.85); }      /* Tứ hóa lưu niên: thoi */
+.tu-hoa-luu-nien > span { transform: rotate(-45deg); display: inline-block; }
+.tu-hoa-luu-nguyet {
+  /* Tứ hóa lưu nguyệt: LỤC GIÁC không bo góc (test mẫu 2026-07-03, thay vuông bo góc) */
+  border-radius: 0;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+/* Zone 3: Sao Nguyên Cục — NO vertical line, NO labels, màu theo ngũ hành */
+.zone-sao {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  flex: 1;
+  padding-top: 4px;
+  /* [TEST B] Ngân sách vùng sao = 270px (480 - Z1 33 - Z2 66 - Z5 37 - Z6 73 - viền 1)
+     = 11 dòng x 24px (11.25). Nguyên cục fill TỪ TRÊN XUỐNG; khối Đv./L. neo đáy.
+     min-height 168 = 7 dòng nguyên cục x 24px. */
+  min-height: 168px;
+}
+
+.zone-sao-left {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap; /* [TEST B] */
+}
+
+.zone-sao-right {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap; /* [TEST B] */
+}
+
+/* Design Spec §4.3: Zone 3 nhóm Sát Tinh in đậm. Engine gắn class theo Cấp 1
+   của bảng phân loại (TechDoc 0.8) — đúng 12 sao Sát Tinh, không tự suy. */
+.sao-name.sat-tinh {
+  font-weight: 700;
+}
+
+.sao-name {
+  line-height: 24px; /* [TEST B] pitch 24px — Zone 6 thêm hàng Đv., giữ ô 480px, vẫn 11 dòng */
+  margin-bottom: 0;
+}
+
+/* Zone 4: Đv./L. Cát Tinh + Sát Tinh — placeholder trắng, italic */
+.zone-dai-van {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 4px;
+  /* KHÔNG khóa cứng: mỗi loại Đv./L. có thể chiếm 2+ dòng (VD 2 dòng Đv.Cát Tinh).
+     Khối luôn NEO ĐÁY vùng sao (zone-sao flex:1 đẩy xuống); thứ tự từ đáy lên:
+     hàng L. (lưu niên) sát khung Zone 5 nhất, hàng Đv. (đại vận) ngay trên. */
+  min-height: 48px; /* [TEST B] tối thiểu 2 hàng x 24px */
+  padding-bottom: 0;
+  margin-bottom: 0;
+  font-family: var(--font-body);
+  font-size: 16px; /* [TEST B] 'Đv. Kình Dương' 1 dòng trong cột 121px */;
+  line-height: 24px; /* [TEST B] */
+}
+
+.zone-dai-van-left {
+  text-align: left;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text-primary);
+  white-space: nowrap; /* [TEST B] */
+}
+
+.zone-dai-van-right {
+  text-align: right;
+  font-style: italic;
+  font-weight: 400; /* bỏ bold — cột phải cùng Regular Italic như cột trái */
+  color: var(--text-primary);
+  white-space: nowrap; /* [TEST B] */
+}
+
+/* Zone 5: Vòng Trường Sinh — highlight nhỏ 74x36px quanh T.Tháng */
+.zone-vts {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 37px; /* 36px nội dung + 1px border — ngân sách Figma y=381-417 */
+  padding: 0 11px;
+  border-top: 1px solid var(--border-color);
+  margin: 0 -10px;
+  font-family: var(--font-body);
+}
+
+.zone-vts-lquan {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap; /* [TEST B] */
+}
+
+.zone-vts-thang {
+  font-size: 18px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--accent-cyan);
+  white-space: nowrap; /* [TEST B] */
+}
+
+.zone-vts-thang-highlight {
+  width: 74px;
+  height: 36px;
+  background: var(--bg-highlight);
+  border-radius: 0; /* Figma không bo góc */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zone-vts-thang-highlight span {
+  /* Số đại vận = thông tin nguyên cục → font normal, trắng */
+  font-size: 16px;
+  font-weight: 400;
+  font-style: normal;
+  color: var(--text-primary);
+}
+
+.zone-vts-canchi {
+  font-size: 16px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-primary);
+  white-space: nowrap; /* [TEST B] */
+}
+
+/* Zone 6: Lưu Vòng — 18px Light Italic trắng */
+.zone-luu {
+  font-family: var(--font-body);
+  font-size: 16px; /* [TEST B] 18->16: 'Đv. Tướng Tinh' phải nằm gọn 1 dòng trong cột 125px */
+  font-weight: 300;
+  font-style: italic;
+  padding-top: 0;
+  margin: 0 -10px; /* sát đáy ô — đáy dùng viền ô, không vẽ riêng */
+  padding-left: 10px;
+  padding-right: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.zone-luu-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 0;
+  line-height: 24px; /* [TEST B] */
+  color: var(--text-primary);
+}
+
+.zone-luu-left {
+  text-align: left;
+  white-space: nowrap; /* [TEST B] cấm xuống dòng */
+}
+
+.zone-luu-right {
+  text-align: right;
+  white-space: nowrap; /* [TEST B] */
+}
+
+/* Placeholder cuối ô cung (mục 7.9 spec) */
+
+
+/* Color classes - Ngũ Hành */
+.c-kim { color: var(--kim); }
+.c-hoa { color: var(--hoa); }
+.c-moc { color: var(--moc); }
+.c-thuy { color: var(--thuy); }
+.c-tho { color: var(--tho); }
+
+/* ========================================
+   INPUT PANEL STYLES
+======================================== */
+.panel-cell {
+  /* vùng 2x2 của Input Panel cũng là 1 "ô" trong khung la võng:
+     vẽ cạnh trên + trái như .cung để khung không bị hụt line quanh panel */
+  grid-column: 2 / 4;
+  grid-row: 2 / 4;
+  border-top: var(--border-width) solid var(--border-color);
+  border-left: var(--border-width) solid var(--border-color);
+  display: flex;
+  background: var(--bg-primary);
+}
+
+.input-panel {
+  flex: 1;
+  margin: 13px 11px;
+  /* v9.1: bỏ toàn bộ border/zone line trong panel — trình bày sạch, tách section bằng khoảng trắng */
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-body);
+  font-size: 18px;
+  background: var(--bg-primary);
+}
+
+.user-header .field-name {
+  font-family: var(--font-header);
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  width: 300px;
+}
+.user-header .field-name::placeholder {
+  text-transform: none;
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+.user-header-suffix {
+  margin-left: 8px;
+}
+
+.user-header {
+  font-family: var(--font-header);
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0 0 4px;
+  margin-bottom: 28px;
+  color: var(--text-primary);
+}
+
+.input-section {
+  margin-bottom: 16px;
+}
+
+.input-label {
+  color: var(--text-primary);
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.input-value-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.input-value {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.input-computed {
+  font-style: italic;
+  font-weight: 500;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+/* Box dashed bo góc 10px quanh khối Birth Data (mới v9) */
+.birth-data-box {
+  margin-bottom: 24px;
+}
+.birth-data-box .input-section:last-child {
+  margin-bottom: 0;
+}
+
+/* MỆNH/CỤC Box */
+.menh-cuc-box {
+  margin: 24px 0;
+}
+
+.menh-cuc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.menh-cuc-row:last-child {
+  margin-bottom: 0;
+}
+
+.menh-cuc-label {
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.menh-cuc-value {
+  font-size: 18px;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* Đại Vận section */
+.dai-van-section {
+  padding-top: 4px;
+  margin-top: 24px;
+}
+
+.dai-van-label {
+  color: var(--text-primary);
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.dai-van-row {
+  display: grid;
+  grid-template-columns: 120px 100px 1fr;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+
+.dai-van-can-chi {
+  font-weight: 500;
+  font-style: italic;
+  font-size: 18px;
+  text-align: left;
+  color: var(--napam-muted);
+}
+
+.dai-van-range {
+  font-size: 18px;
+  font-weight: 500;
+  font-style: italic;
+  text-align: left;
+  color: var(--napam-muted);
+}
+
+.dai-van-nap-am {
+  font-weight: 700;
+  font-style: italic;
+  font-size: 18px;
+  text-align: right;
+  /* [v10] bỏ override — nạp âm ăn màu c-* (quyết định P3#1) */
+  }
+
+/* Lưu Niên rows */
+.luu-nien-row {
+  display: grid;
+  grid-template-columns: 120px 100px 1fr;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.luu-nien-label {
+  color: var(--text-primary);
+  font-size: 18px;
+  text-align: left;
+}
+
+.luu-nien-value {
+  font-size: 18px;
+  font-weight: 400;
+  text-align: left;
+  color: var(--text-primary);
+}
+/* Giá trị tĩnh (không phải ô nhập) thụt 11px = border 1px + padding 10px của .field,
+   để số thẳng cột với chữ số trong các ô input trên/dưới */
+.luu-nien-value.val-static {
+  padding-left: 11px;
+}
+
+.luu-nien-computed {
+  font-weight: 500;
+  font-style: italic;
+  font-size: 18px;
+  text-align: right;
+}
+
+/* Ô nhập liệu (chốt v9.4): nền sáng nhẹ, KHÔNG viền — giữ phong cách minimalism/clean,
+   viền làm bố cục rối (Nhã confirm 2026-07-03) */
+.field {
+  background: rgba(255, 255, 255, 0.07);
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: 18px;
+  color: var(--text-primary);
+  text-align: left;
+}
+.field::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Focus: viền cyan accent thay cho outline mặc định của browser */
+.field:focus {
+  outline: 1px solid var(--accent-cyan);
+}
+
+/* Width vừa nội dung theo từng loại field */
+.field-year { width: 72px; }
+.field-2digit { width: 56px; }
+
+/* Ô lookup Nơi Sinh — rộng hơn để chứa tên địa danh */
+.field-place { width: 260px; }
+
+/* Ẩn spinner mặc định của input number (Chrome/Safari + Firefox) */
+.field::-webkit-outer-spin-button,
+.field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.field[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Light mode: nền tối nhẹ trên nền sáng */
+.la-so-root[data-la-so-theme="light"] .field {
+  background: rgba(0, 0, 0, 0.06);
+}
