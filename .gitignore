@@ -9,3 +9,11 @@ la-so-mau.html
 
 # Bản xem trước sinh bởi scripts/xuat-trang.mjs
 xem-truoc-*.html
+
+# Trạng thái chia sẻ tạm thời
+.chia-se/
+
+# Cấu hình triển khai (chứa khoá)
+deployment/gcp/.env
+deployment/gcp/*.tar.gz
+deployment/gcp/build-output/

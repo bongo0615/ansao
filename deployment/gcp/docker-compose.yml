@@ -1,0 +1,56 @@
+name: ansao
+
+# Bản dùng ảnh DỰNG SẴN — build-local.sh đóng gói ảnh vào images.tar, VM chỉ
+# `docker load` rồi `docker compose up -d`. VM không bao giờ phải build: máy
+# e2-small không đủ RAM cho `next build`, và build trên VM nghĩa là mã nguồn
+# phải nằm trên đó.
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data          # chứng chỉ Let's Encrypt — mất là bị rate-limit
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      web:
+        condition: service_healthy
+    networks: [ansao]
+
+  web:
+    image: ansao-web:${VERSION:-latest}
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      # Chỉ những biến DÙNG PHÍA SERVER mới đặt ở đây. NEXT_PUBLIC_* đã được
+      # nhúng vào bundle lúc build, đặt lại ở đây không có tác dụng gì.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 4
+      start_period: 20s
+    networks: [ansao]
+
+networks:
+  ansao:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -222,6 +222,41 @@ node scripts/xuat-la-so.mjs …          # xuất HTML để soi mắt thường
 npx vitest run tests/la-so-mau.test.ts # 25 test khoá phần đã khớp
 ```
 
+## Triển khai
+
+Gói triển khai nằm ở `deployment/gcp/` — một VM GCE chạy Docker Compose với hai
+container: Caddy (TLS + reverse proxy) và Next.js standalone. Supabase và
+Anthropic là dịch vụ ngoài; VM không giữ trạng thái gì ngoài chứng chỉ.
+
+```bash
+cd deployment/gcp
+cp .env.example .env      # điền DOMAIN, Supabase, ANTHROPIC_API_KEY
+./build-local.sh          # typecheck + test + dựng ảnh amd64 + thử ảnh + đóng gói
+./push.sh                 # scp lên VM rồi chạy deploy.sh
+```
+
+Hướng dẫn đầy đủ (tạo VM, DNS, tường lửa, vận hành, xử lý sự cố):
+[`deployment/gcp/HUONG_DAN_GCP.md`](deployment/gcp/HUONG_DAN_GCP.md).
+
+Vài điểm thiết kế đáng lưu ý:
+
+- **VM không bao giờ build.** Ảnh dựng ở máy dev, `docker save` vào tarball, VM
+  chỉ `docker load`. `next build` cần hơn 2GB RAM — e2-small không đủ — và build
+  trên VM nghĩa là mã nguồn phải nằm trên đó.
+- **`build-local.sh` chạy typecheck + toàn bộ test trước khi dựng ảnh**, rồi
+  **khởi động thử ảnh** và kiểm tra trang đăng nhập có cấu hình Supabase hay
+  không. Ảnh thiếu `NEXT_PUBLIC_*` vẫn build trót lọt và chỉ hỏng khi lên VM —
+  bước thử này chặn đúng loại lỗi đó.
+- **`NEXT_PUBLIC_*` bị nhúng lúc build**, kể cả trong bundle server. Đổi giá trị
+  thì phải build lại; sửa `.env` trên VM rồi restart là vô ích. Các biến còn lại
+  (`ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) đọc lúc chạy.
+- **Caddy đặt `flush_interval -1`** cho streaming SSE của `/api/chat`. Thiếu dòng
+  này thì câu trả lời hiện ra một cục sau khi model viết xong thay vì chảy dần.
+- **CSP mở cho cả `fonts.googleapis.com` (CSS) lẫn `fonts.gstatic.com` (file
+  font)** — thiếu một trong hai là chữ tiếng Việt rơi về font hệ thống.
+- Healthcheck dùng `/api/health`, cố ý không chạm Supabase hay Anthropic: gọi ra
+  ngoài mỗi 15 giây vừa tốn hạn mức vừa khiến container bị đánh chết oan.
+
 ## Ghi chú kỹ thuật đáng lưu ý
 
 - **Hệ toạ độ**: mọi vị trí cung hệ `Dần = 1`; riêng giờ sinh `H` hệ `Tí = 1`.

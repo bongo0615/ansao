@@ -7,15 +7,24 @@
 #
 # Dùng Cloudflare Quick Tunnel — không cần tài khoản, không cần thẻ. Địa chỉ đổi
 # mỗi lần chạy và mất khi bạn Ctrl+C.
+#
+# Hai chế độ:
+#   chia-se.sh          chạy nổi — Ctrl+C là đóng (dùng trong terminal của bạn)
+#   chia-se.sh --nen    chạy nền — tách khỏi phiên gọi, sống tiếp sau khi lệnh
+#                       trả về. Dừng bằng ./dev.sh dong-chia-se
 set -e
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 PORT="${PORT:-3000}"
+NEN=0
+[ "$1" = "--nen" ] && NEN=1
+TT_DIR="$ROOT_DIR/.chia-se"
+mkdir -p "$TT_DIR"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; DIM='\033[2m'; NC='\033[0m'
-LOG="$(mktemp -t ansao-tunnel)"
+LOG="$TT_DIR/tunnel.log"
 PID_APP=""; PID_TUN=""
 
 don() {
@@ -28,7 +37,7 @@ don() {
     echo -e "${GREEN}Đã đóng địa chỉ công khai.${NC}"
     exit 0
 }
-trap don INT TERM
+[ "$NEN" = "0" ] && trap don INT TERM
 
 if ! command -v cloudflared >/dev/null 2>&1; then
     echo -e "${RED}✗ Chưa cài cloudflared.${NC}"
@@ -69,8 +78,9 @@ rm -rf "$ROOT_DIR/.next"
 npm run build >/dev/null 2>&1 || { echo -e "${RED}✗ Build thất bại.${NC} Chạy 'npm run build' để xem lỗi."; exit 1; }
 
 lsof -ti:"$PORT" 2>/dev/null | xargs kill 2>/dev/null || true
-npx next start --port "$PORT" >/dev/null 2>&1 &
-PID_APP=$!
+# `nohup` + subshell: tách khỏi job control và khỏi SIGHUP của phiên gọi.
+( nohup npx next start --port "$PORT" >"$TT_DIR/app.log" 2>&1 & echo $! >"$TT_DIR/app.pid" )
+PID_APP=$(cat "$TT_DIR/app.pid")
 
 for _ in $(seq 1 40); do
     curl -sf -o /dev/null "http://localhost:$PORT/" && break
@@ -81,8 +91,9 @@ echo -e "  ${GREEN}✓${NC} App chạy ở cổng $PORT"
 
 # ── Mở đường hầm ────────────────────────────────────────────────────────────
 echo -e "${BLUE}▸${NC} Mở đường hầm Cloudflare…"
-cloudflared tunnel --no-autoupdate --url "http://localhost:$PORT" >"$LOG" 2>&1 &
-PID_TUN=$!
+: >"$LOG"
+( nohup cloudflared tunnel --no-autoupdate --url "http://localhost:$PORT" >"$LOG" 2>&1 & echo $! >"$TT_DIR/tunnel.pid" )
+PID_TUN=$(cat "$TT_DIR/tunnel.pid")
 
 DIA_CHI=""
 for _ in $(seq 1 60); do
@@ -108,7 +119,15 @@ echo -e "  ${DIM}Gửi kèm cho người thử:${NC}"
 echo -e "  ${DIM}  Email:    ${TK_EMAIL:-thu@ansao.test}${NC}"
 echo -e "  ${DIM}  Mật khẩu: (mật khẩu bạn đặt khi tạo tài khoản)${NC}"
 echo -e "${DIM}──────────────────────────────────────────────────────${NC}"
+echo "$DIA_CHI" >"$TT_DIR/url.txt"
+
+if [ "$NEN" = "1" ]; then
+    echo -e "${DIM}Đang chạy nền — vẫn sống sau khi lệnh này kết thúc.${NC}"
+    echo -e "${DIM}Đóng lại bằng: ./dev.sh dong-chia-se${NC}"
+    echo ""
+    exit 0
+fi
+
 echo -e "${DIM}Địa chỉ chỉ sống khi cửa sổ này còn mở. Ctrl+C để đóng.${NC}"
 echo ""
-
 wait $PID_TUN

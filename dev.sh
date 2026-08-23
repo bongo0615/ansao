@@ -11,7 +11,9 @@
 #   ./dev.sh kiem-tra   Typecheck + test + build production
 #   ./dev.sh xuat       Xuất lá số ra HTML tĩnh để đối chiếu mockup
 #   ./dev.sh tai-khoan  Tạo tài khoản thử (đã xác nhận sẵn, đăng nhập được ngay)
-#   ./dev.sh chia-se    Mở địa chỉ công khai tạm thời cho người khác vào thử
+#   ./dev.sh chia-se    Mở địa chỉ công khai (chạy nổi, Ctrl+C để đóng)
+#   ./dev.sh chia-se-nen    Như trên nhưng chạy nền, sống tiếp sau khi lệnh xong
+#   ./dev.sh dong-chia-se   Đóng địa chỉ công khai đang chạy nền
 #   ./dev.sh dung       Dừng dev server đang chạy
 #
 # Biến môi trường:
@@ -121,6 +123,20 @@ case "$LENH" in
         ;;
     chia-se)
         exec "$ROOT_DIR/scripts/chia-se.sh"
+        ;;
+    chia-se-nen)
+        exec "$ROOT_DIR/scripts/chia-se.sh" --nen
+        ;;
+    dong-chia-se)
+        for f in tunnel app; do
+            [ -f "$ROOT_DIR/.chia-se/$f.pid" ] && kill "$(cat "$ROOT_DIR/.chia-se/$f.pid")" 2>/dev/null || true
+            rm -f "$ROOT_DIR/.chia-se/$f.pid"
+        done
+        pkill -f "cloudflared tunnel" 2>/dev/null || true
+        lsof -ti:"$PORT" 2>/dev/null | xargs kill 2>/dev/null || true
+        rm -f "$ROOT_DIR/.chia-se/url.txt"
+        xong "Đã đóng địa chỉ công khai."
+        exit 0
         ;;
     tai-khoan)
         node scripts/tao-tai-khoan-thu.mjs "$2" "$3"

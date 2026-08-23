@@ -1,0 +1,39 @@
+# www → apex, giữ một địa chỉ chính thức duy nhất cho SEO và cookie.
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
+
+{$DOMAIN} {
+	# Trần kích thước body ngay tại biên. Lá số chỉ gửi vài trăm byte JSON;
+	# câu hỏi cho chuyên gia tối đa 8KB mỗi tin. 1MB là rộng rãi và chặn được
+	# việc dội body khổng lồ vào Node.
+	request_body {
+		max_size 1MB
+	}
+
+	reverse_proxy web:3000 {
+		# Streaming SSE của /api/chat: KHÔNG đệm, không thì câu trả lời chỉ
+		# hiện ra một cục sau khi model viết xong.
+		flush_interval -1
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		# HSTS 1 năm. Chỉ bật preload khi đã chắc chắn HTTPS vĩnh viễn —
+		# gỡ khỏi danh sách preload rất mất công.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		# Next cần 'unsafe-inline' cho chunk bootstrap; Tailwind JIT chèn style
+		# inline. Google Fonts phục vụ cả CSS (googleapis) lẫn file font
+		# (gstatic) — thiếu một trong hai là chữ Việt rơi về font hệ thống.
+		# connect-src mở cho Supabase (REST + Realtime).
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

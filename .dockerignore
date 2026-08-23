@@ -1,0 +1,20 @@
+# Giữ build context nhỏ — mọi thứ ở đây không cần cho `next build`.
+node_modules
+.next
+.git
+.github
+tests
+e2e
+scripts
+deployment
+supabase
+.env*
+!.env.example
+*.log
+*.tar.gz
+.chia-se
+xem-truoc-*.html
+la-so-mau.html
+chon-app-icon.html
+*.tsbuildinfo
+README.md
