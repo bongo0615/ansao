@@ -22,13 +22,15 @@ export function KhungChat({
   laSo,
   tenDuongSo,
   khoa,
+  lyDoKhoa = "chua_dang_nhap",
 }: {
   laSoId?: string;
   /** Chế độ khách: gửi thẳng input vì lá số chưa có trong CSDL. */
   laSo?: AnSaoInput;
   tenDuongSo: string;
-  /** Chưa đăng nhập → khoá khung, mời đăng nhập thay vì để gõ rồi nhận 401. */
+  /** Khoá khung: chưa đăng nhập, hoặc lá số chưa đủ thông tin. */
   khoa?: boolean;
+  lyDoKhoa?: "chua_dang_nhap" | "chua_du";
 }) {
   const [tin, setTin] = useState<TinNhan[]>([]);
   const [nhap, setNhap] = useState("");
@@ -147,7 +149,7 @@ export function KhungChat({
         </div>
       </div>
 
-      {/* Khoá: chưa đăng nhập */}
+      {/* Khoá: chưa đăng nhập, hoặc lá số chưa đủ thông tin */}
       {khoa ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
           <span className="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink-dim">
@@ -161,24 +163,48 @@ export function KhungChat({
               strokeLinecap="round"
               aria-hidden
             >
-              <rect x="3" y="7" width="10" height="6.5" rx="1.5" />
-              <path d="M5.5 7V5a2.5 2.5 0 015 0v2" />
+              {lyDoKhoa === "chua_du" ? (
+                <>
+                  <path d="M6 6.2a2 2 0 113 1.8c-.6.3-1 .8-1 1.4v.3" />
+                  <circle cx="8" cy="12" r=".8" fill="currentColor" stroke="none" />
+                  <circle cx="8" cy="8" r="6" />
+                </>
+              ) : (
+                <>
+                  <rect x="3" y="7" width="10" height="6.5" rx="1.5" />
+                  <path d="M5.5 7V5a2.5 2.5 0 015 0v2" />
+                </>
+              )}
             </svg>
           </span>
-          <div>
-            <p className="font-display text-[15px] font-semibold">Đăng nhập để hỏi chuyên gia</p>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-ink-dim">
-              Lá số vẫn lập và in được bình thường. Luận giải cần tài khoản để gắn cuộc trò chuyện
-              với lá số của bạn.
-            </p>
-          </div>
-          <a
-            href="/login"
-            className="rounded-full bg-gradient-to-r from-hanh-kim to-hanh-thuy px-5 py-2
-                        text-[13px] font-semibold text-white transition hover:brightness-110"
-          >
-            Đăng nhập
-          </a>
+          {lyDoKhoa === "chua_du" ? (
+            <div>
+              <p className="font-display text-[15px] font-semibold">Chưa có lá số để luận</p>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-ink-dim">
+                Nhập ngày, tháng, năm và giờ sinh ở khung giữa. Lá số hiện ra là
+                tôi xem được ngay.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div>
+                <p className="font-display text-[15px] font-semibold">
+                  Đăng nhập để hỏi chuyên gia
+                </p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-dim">
+                  Lá số vẫn lập và in được bình thường. Luận giải cần tài khoản để gắn cuộc
+                  trò chuyện với lá số của bạn.
+                </p>
+              </div>
+              <a
+                href="/login"
+                className="rounded-full bg-gradient-to-r from-hanh-kim to-hanh-thuy px-5 py-2
+                           text-[13px] font-semibold text-white transition hover:brightness-110"
+              >
+                Đăng nhập
+              </a>
+            </>
+          )}
         </div>
       ) : (
         <>

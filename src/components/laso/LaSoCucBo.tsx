@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { layCucBo } from "@/lib/luu-tru-cuc-bo";
 import { rowToInput } from "@/lib/la-so-io";
+import { tuAnSaoInput } from "@/lib/tuvi/ban-nhap";
 import type { AnSaoInput } from "@/lib/tuvi/engine";
 import { LaSoWorkspace } from "./LaSoWorkspace";
 
@@ -37,5 +38,5 @@ export function LaSoCucBo({ id }: { id: string }) {
     );
   }
 
-  return <LaSoWorkspace banDau={tt.input} id={id} noiLuu="cuc_bo" />;
+  return <LaSoWorkspace banDau={tuAnSaoInput(tt.input)} id={id} noiLuu="cuc_bo" />;
 }

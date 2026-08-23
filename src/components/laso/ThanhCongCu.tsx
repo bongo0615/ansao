@@ -27,7 +27,7 @@ const BUOC = [0.3, 0.4, 0.5, 0.6, 0.75, 0.9, 1];
 
 export function ThanhCongCu({
   ten, phu, cheDo, zoom, doiCheDo, theme, doiTheme, tab, doiTab,
-  trangThaiLuu, onLuu, onXoa, coTheLuu, duongVe, tin, nguoiDung,
+  trangThaiLuu, onLuu, onXoa, coTheLuu, duongVe, tin, nguoiDung, choPhepLuu = true,
 }: {
   ten: string;
   phu: string;
@@ -45,6 +45,8 @@ export function ThanhCongCu({
   duongVe: { href: string; nhan: string };
   tin: Tin[];
   nguoiDung?: { email: string; hoTen: string | null } | null;
+  /** false khi bát tự chưa đủ — không có lá số thì không có gì để lưu. */
+  choPhepLuu?: boolean;
 }) {
   const buocZoom = (huong: 1 | -1) => {
     const gan = BUOC.reduce((a, b) => (Math.abs(b - zoom) < Math.abs(a - zoom) ? b : a));
@@ -156,7 +158,10 @@ export function ThanhCongCu({
         </Menu>
 
         {coTheLuu && onLuu && (
-          <button onClick={onLuu} disabled={trangThaiLuu === "dang_luu"}
+          <button
+            onClick={onLuu}
+            disabled={trangThaiLuu === "dang_luu" || !choPhepLuu}
+            title={choPhepLuu ? undefined : "Nhập đủ ngày giờ sinh trước đã"}
             className="ml-0.5 shrink-0 rounded-lg bg-gradient-to-r from-hanh-kim to-hanh-thuy px-3.5 py-2
                        text-[13px] font-semibold text-white transition hover:brightness-110 disabled:opacity-50">
             {{ chua_luu: "Lưu", dang_luu: "Đang lưu…", da_luu: "Đã lưu", loi: "Thử lại" }[

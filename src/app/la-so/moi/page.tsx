@@ -1,18 +1,17 @@
 import { cheDoKhach } from "@/lib/che-do";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { LaSoWorkspace, type NoiLuu } from "@/components/laso/LaSoWorkspace";
-import type { AnSaoInput } from "@/lib/tuvi/engine";
+import { banNhapRong } from "@/lib/tuvi/ban-nhap";
 
 export const metadata = { title: "Lập lá số mới" };
 
-function macDinh(): AnSaoInput {
-  return {
-    hoTen: "", gioiTinh: "nu",
-    namSinh: 1990, thangSinh: 1, ngaySinh: 1, gioSinh: 12, phutSinh: 0,
-    noiSinh: "Hồ Chí Minh, Việt Nam", timeZone: "Asia/Ho_Chi_Minh",
-    namXem: new Date().getFullYear(), thangXem: null, daiVanTuoiDau: null,
-  };
-}
+/**
+ * Form bắt đầu RỖNG. Trước đây điền sẵn 01/01/1990 làm chỗ dựa, nhưng người
+ * dùng nhìn thấy một lá số hoàn chỉnh của người không có thật — và hỏi được
+ * chuyên gia về nó. Chỉ "Năm xem" được đặt trước, vì đó là bối cảnh xem chứ
+ * không phải dữ kiện của đương số.
+ */
+const macDinh = () => ({ ...banNhapRong(), namXem: new Date().getFullYear() });
 
 export default async function TrangLaSoMoi() {
   const khach = cheDoKhach();

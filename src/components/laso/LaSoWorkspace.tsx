@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KhungChat } from "@/components/chat/KhungChat";
 import { luuCucBo, xoaCucBo } from "@/lib/luu-tru-cuc-bo";
-import type { AnSaoInput } from "@/lib/tuvi/engine";
+import { conThieu, hoanChinh, type BanNhap } from "@/lib/tuvi/ban-nhap";
 import { chatMo } from "@/lib/che-do";
 import type { Tin } from "@/components/ui/ThongBao";
 import { LaSoView, type CheDoXem } from "./LaSoView";
@@ -25,13 +25,13 @@ type Tab = "la-so" | "luan-giai";
 const KHOA_CHE_DO = "ansao.che-do-xem";
 
 export function LaSoWorkspace({ banDau, id, noiLuu, nguoiDung }: {
-  banDau: AnSaoInput;
+  banDau: BanNhap;
   id?: string;
   noiLuu: NoiLuu;
   nguoiDung?: { email: string; hoTen: string | null } | null;
 }) {
   const router = useRouter();
-  const [value, setValue] = useState<AnSaoInput>(banDau);
+  const [value, setValue] = useState<BanNhap>(banDau);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [tab, setTab] = useState<Tab>("la-so");
   const [cheDo, setCheDo] = useState<CheDoXem>("cao");
@@ -40,6 +40,11 @@ export function LaSoWorkspace({ banDau, id, noiLuu, nguoiDung }: {
   const [loi, setLoi] = useState<string | null>(null);
   const dirty = useRef(false);
   const coTheLuu = noiLuu !== "khong";
+
+  // Chưa đủ bát tự thì chưa có lá số — không lưu, không hỏi chuyên gia được.
+  const thieu = conThieu(value);
+  const dayDu = thieu.length === 0;
+  const daySo = hoanChinh(value);
 
   // Nhớ chế độ xem giữa các lần mở — thói quen zoom rất cá nhân.
   useEffect(() => {
@@ -53,7 +58,7 @@ export function LaSoWorkspace({ banDau, id, noiLuu, nguoiDung }: {
     try { localStorage.setItem(KHOA_CHE_DO, String(c)); } catch { /* bỏ qua */ }
   }, []);
 
-  const onChange = useCallback((next: AnSaoInput) => {
+  const onChange = useCallback((next: BanNhap) => {
     dirty.current = true;
     setTrangThai("chua_luu");
     setValue(next);
@@ -66,10 +71,11 @@ export function LaSoWorkspace({ banDau, id, noiLuu, nguoiDung }: {
   }, [coTheLuu]);
 
   async function luu() {
+    if (!dayDu) return;
     setTrangThai("dang_luu"); setLoi(null);
     try {
       if (noiLuu === "cuc_bo") {
-        const maId = luuCucBo(value, id);
+        const maId = luuCucBo(daySo!, id);
         dirty.current = false; setTrangThai("da_luu");
         if (!id) router.push(`/la-so/${maId}`);
         return;
@@ -78,9 +84,9 @@ export function LaSoWorkspace({ banDau, id, noiLuu, nguoiDung }: {
         method: id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          hoTen: value.hoTen, gioiTinh: value.gioiTinh,
+          hoTen: value.hoTen.trim() || "Chưa đặt tên", gioiTinh: value.gioiTinh,
           namSinh: value.namSinh, thangSinh: value.thangSinh, ngaySinh: value.ngaySinh,
-          gioSinh: value.gioSinh, phutSinh: value.phutSinh, noiSinh: value.noiSinh,
+          gioSinh: value.gioSinh, phutSinh: value.phutSinh ?? 0, noiSinh: value.noiSinh,
           namXem: value.namXem ?? null, thangXem: value.thangXem ?? null,
           daiVanTuoiDau: value.daiVanTuoiDau ?? null,
         }),
@@ -141,6 +147,7 @@ export function LaSoWorkspace({ banDau, id, noiLuu, nguoiDung }: {
         theme={theme} doiTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
         tab={tab} doiTab={setTab}
         trangThaiLuu={trangThai} onLuu={coTheLuu ? luu : undefined}
+        choPhepLuu={dayDu}
         onXoa={id ? xoa : undefined} coTheLuu={coTheLuu}
         duongVe={{ href: coTheLuu ? "/la-so" : "/", nhan: coTheLuu ? "Lá số của tôi" : "Trang chủ" }}
         tin={tin}
@@ -163,9 +170,10 @@ export function LaSoWorkspace({ banDau, id, noiLuu, nguoiDung }: {
               // Đã lưu trên máy chủ: chỉ gửi id, để server tự đọc bản chuẩn.
               ? { laSoId: id }
               // Chưa lưu (đang lập mới) hoặc lưu cục bộ: gửi thẳng lá số.
-              : { laSo: value })}
+              : { laSo: daySo ?? undefined })}
             tenDuongSo={ten}
-            khoa={noiLuu === "khong" && !chatMo()}
+            khoa={(noiLuu === "khong" && !chatMo()) || !dayDu}
+            lyDoKhoa={!dayDu ? "chua_du" : undefined}
           />
         </div>
       </div>

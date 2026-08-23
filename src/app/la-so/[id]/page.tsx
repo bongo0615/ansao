@@ -4,6 +4,7 @@ import { getServerSupabase } from "@/lib/supabase/server";
 import { LaSoWorkspace } from "@/components/laso/LaSoWorkspace";
 import { LaSoCucBo } from "@/components/laso/LaSoCucBo";
 import { rowToInput, type LaSoRow } from "@/lib/la-so-io";
+import { tuAnSaoInput } from "@/lib/tuvi/ban-nhap";
 
 export default async function TrangLaSo({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,7 +25,7 @@ export default async function TrangLaSo({ params }: { params: Promise<{ id: stri
 
   return (
     <LaSoWorkspace
-      banDau={rowToInput(data as LaSoRow)}
+      banDau={tuAnSaoInput(rowToInput(data as LaSoRow))}
       id={id}
       noiLuu="supabase"
       nguoiDung={{ email: user.email ?? "", hoTen: hoSo?.ho_ten ?? null }}

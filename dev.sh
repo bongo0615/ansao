@@ -11,6 +11,7 @@
 #   ./dev.sh kiem-tra   Typecheck + test + build production
 #   ./dev.sh xuat       Xuất lá số ra HTML tĩnh để đối chiếu mockup
 #   ./dev.sh tai-khoan  Tạo tài khoản thử (đã xác nhận sẵn, đăng nhập được ngay)
+#   ./dev.sh chia-se    Mở địa chỉ công khai tạm thời cho người khác vào thử
 #   ./dev.sh dung       Dừng dev server đang chạy
 #
 # Biến môi trường:
@@ -117,6 +118,9 @@ case "$LENH" in
         npm run build
         xong "Tất cả đều qua."
         exit 0
+        ;;
+    chia-se)
+        exec "$ROOT_DIR/scripts/chia-se.sh"
         ;;
     tai-khoan)
         node scripts/tao-tai-khoan-thu.mjs "$2" "$3"

@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useRef } from "react";
-import type { AnSaoInput } from "@/lib/tuvi/engine";
+import type { BanNhap } from "@/lib/tuvi/ban-nhap";
 import { TAT_CA_NOI_SINH, nhanGmt, nhanNoiSinh, timNoiSinh } from "@/lib/tuvi/noi-sinh";
 import type { LaSo } from "@/lib/tuvi/types";
 
@@ -35,13 +35,17 @@ export function InputPanel({
   onChange,
   readOnly,
 }: {
-  laSo: LaSo;
-  value: AnSaoInput;
-  onChange?: (next: AnSaoInput) => void;
+  /** null khi chưa đủ thông tin — các ô "computed" để trống. */
+  laSo: LaSo | null;
+  value: BanNhap;
+  onChange?: (next: BanNhap) => void;
   readOnly: boolean;
 }) {
-  const set = <K extends keyof AnSaoInput>(k: K, v: AnSaoInput[K]) =>
+  const set = <K extends keyof BanNhap>(k: K, v: BanNhap[K]) =>
     onChange?.({ ...value, [k]: v });
+
+  /** Ô nhập số: chuỗi rỗng ⇒ null, để phân biệt "chưa nhập" với số 0. */
+  const soHoacNull = (s: string) => (s.trim() === "" ? null : Number(s));
 
   const ngoaiRef = useRef<HTMLDivElement>(null);
   const noiDungRef = useRef<HTMLDivElement>(null);
@@ -66,15 +70,12 @@ export function InputPanel({
     return () => ro.disconnect();
   });
 
-  const bt = laSo.batTu;
-  const dv = laSo.daiVanHienHanh;
-  const gmt = nhanGmt(
-    value.timeZone,
-    value.namSinh,
-    value.thangSinh,
-    value.ngaySinh,
-    value.gioSinh,
-  );
+  const bt = laSo?.batTu ?? null;
+  const dv = laSo?.daiVanHienHanh ?? null;
+  const gmt = laSo
+    ? nhanGmt(laSo.input.timeZone, laSo.input.duong.year, laSo.input.duong.month,
+              laSo.input.duong.day, laSo.input.duong.hour)
+    : "—";
 
   return (
     <div className="input-panel" ref={ngoaiRef}>
@@ -88,7 +89,7 @@ export function InputPanel({
             readOnly={readOnly}
             onChange={(e) => set("hoTen", e.target.value)}
           />
-          <span className="user-header-suffix">- {laSo.amDuongGioiTinh.toUpperCase()}</span>
+          <span className="user-header-suffix">{laSo ? ` - ${laSo.amDuongGioiTinh.toUpperCase()}` : ""}</span>
         </div>
 
         <div className="birth-data-box">
@@ -104,7 +105,7 @@ export function InputPanel({
                 <option value="nu">Nữ</option>
                 <option value="nam">Nam</option>
               </select>
-              <span className="input-computed">{laSo.amDuongGioiTinh}</span>
+              <span className="input-computed">{laSo ? laSo.amDuongGioiTinh : "—"}</span>
             </div>
           </div>
 
@@ -114,14 +115,14 @@ export function InputPanel({
               <input
                 type="number"
                 className="field field-year"
-                value={value.namSinh}
+                value={value.namSinh ?? ""}
                 readOnly={readOnly}
                 min={1900}
                 max={2100}
-                onChange={(e) => set("namSinh", Number(e.target.value))}
+                onChange={(e) => set("namSinh", soHoacNull(e.target.value))}
               />
               <span className="input-computed">
-                {bt.nam.can} {bt.nam.chi} ({bt.am.year}) - <NapAm na={bt.nam.napAm} />
+                {bt ? `${bt.nam.can} ${bt.nam.chi}` : "—"} {bt ? ` (${bt.am.year}) - ` : ""}{bt && <NapAm na={bt.nam.napAm} />}
               </span>
             </div>
           </div>
@@ -132,15 +133,15 @@ export function InputPanel({
               <input
                 type="number"
                 className="field field-2digit"
-                value={value.thangSinh}
+                value={value.thangSinh ?? ""}
                 readOnly={readOnly}
                 min={1}
                 max={12}
-                onChange={(e) => set("thangSinh", Number(e.target.value))}
+                onChange={(e) => set("thangSinh", soHoacNull(e.target.value))}
               />
               <span className="input-computed">
-                {bt.thang.can} {bt.thang.chi} ({bt.am.month}
-                {bt.am.leap ? " nhuận" : ""}) - <NapAm na={bt.thang.napAm} />
+                {bt ? `${bt.thang.can} ${bt.thang.chi} (${bt.am.month}${bt.am.leap ? " nhuận" : ""}) - ` : "—"}
+                {bt && <NapAm na={bt.thang.napAm} />}
               </span>
             </div>
           </div>
@@ -151,14 +152,14 @@ export function InputPanel({
               <input
                 type="number"
                 className="field field-2digit"
-                value={value.ngaySinh}
+                value={value.ngaySinh ?? ""}
                 readOnly={readOnly}
                 min={1}
                 max={31}
-                onChange={(e) => set("ngaySinh", Number(e.target.value))}
+                onChange={(e) => set("ngaySinh", soHoacNull(e.target.value))}
               />
               <span className="input-computed">
-                {bt.ngay.can} {bt.ngay.chi} ({bt.am.day}) - <NapAm na={bt.ngay.napAm} />
+                {bt ? `${bt.ngay.can} ${bt.ngay.chi}` : "—"} {bt ? ` (${bt.am.day}) - ` : ""}{bt && <NapAm na={bt.ngay.napAm} />}
               </span>
             </div>
           </div>
@@ -173,24 +174,24 @@ export function InputPanel({
                 <input
                   type="number"
                   className="field field-2digit"
-                  value={value.gioSinh}
+                  value={value.gioSinh ?? ""}
                   readOnly={readOnly}
                   min={0}
                   max={23}
-                  onChange={(e) => set("gioSinh", Number(e.target.value))}
+                  onChange={(e) => set("gioSinh", soHoacNull(e.target.value))}
                 />
                 <input
                   type="number"
                   className="field field-2digit"
-                  value={value.phutSinh}
+                  value={value.phutSinh ?? ""}
                   readOnly={readOnly}
                   min={0}
                   max={59}
-                  onChange={(e) => set("phutSinh", Number(e.target.value))}
+                  onChange={(e) => set("phutSinh", soHoacNull(e.target.value))}
                 />
               </span>
               <span className="input-computed">
-                {bt.gio.can} {bt.gio.chi} - <NapAm na={bt.gio.napAm} />
+                {bt ? `${bt.gio.can} ${bt.gio.chi}` : "—"} {bt ? " - " : ""}{bt && <NapAm na={bt.gio.napAm} />}
               </span>
             </div>
           </div>
@@ -222,13 +223,13 @@ export function InputPanel({
         <div className="menh-cuc-box">
           <div className="menh-cuc-row">
             <span className="menh-cuc-label">MỆNH:</span>
-            <span className={`menh-cuc-value ${HANH_CLASS[laSo.menhNapAm.hanh]}`}>
-              {laSo.menhNapAm.ten}
+            <span className={`menh-cuc-value ${laSo ? HANH_CLASS[laSo.menhNapAm.hanh] : ""}`}>
+              {laSo?.menhNapAm.ten ?? "—"}
             </span>
           </div>
           <div className="menh-cuc-row">
             <span className="menh-cuc-label">CỤC:</span>
-            <span className={`menh-cuc-value ${HANH_CLASS[laSo.cuc.hanh]}`}>{laSo.cuc.ten}</span>
+            <span className={`menh-cuc-value ${laSo ? HANH_CLASS[laSo.cuc.hanh] : ""}`}>{laSo?.cuc.ten ?? "—"}</span>
           </div>
         </div>
 
@@ -242,7 +243,7 @@ export function InputPanel({
               disabled={readOnly}
               onChange={(e) => set("daiVanTuoiDau", Number(e.target.value))}
             >
-              {laSo.daiVan.map((d) => (
+              {(laSo?.daiVan ?? []).map((d) => (
                 <option key={d.tuoiDau} value={d.tuoiDau}>
                   {d.tuoiDau} - {d.tuoiCuoi}
                 </option>
@@ -268,15 +269,15 @@ export function InputPanel({
               }}
             />
             <span
-              className={`luu-nien-computed ${laSo.luuNien ? HANH_CLASS[laSo.luuNien.napAm.hanh] : ""}`}
+              className={`luu-nien-computed ${laSo?.luuNien ? HANH_CLASS[laSo.luuNien.napAm.hanh] : ""}`}
             >
-              {laSo.luuNien ? `${laSo.luuNien.can} ${laSo.luuNien.chi} (${laSo.luuNien.nam})` : "—"}
+              {laSo?.luuNien ? `${laSo.luuNien.can} ${laSo.luuNien.chi} (${laSo.luuNien.nam})` : "—"}
             </span>
           </div>
 
           <div className="luu-nien-row">
             <span className="luu-nien-label">Tuổi:</span>
-            <span className="luu-nien-value val-static">{laSo.luuNien?.tuoi ?? "—"}</span>
+            <span className="luu-nien-value val-static">{laSo?.luuNien?.tuoi ?? "—"}</span>
             <span />
           </div>
 
@@ -296,9 +297,9 @@ export function InputPanel({
               }
             />
             <span
-              className={`luu-nien-computed ${laSo.luuNguyet ? HANH_CLASS[laSo.luuNguyet.napAm.hanh] : ""}`}
+              className={`luu-nien-computed ${laSo?.luuNguyet ? HANH_CLASS[laSo.luuNguyet.napAm.hanh] : ""}`}
             >
-              {laSo.luuNguyet
+              {laSo?.luuNguyet
                 ? `${laSo.luuNguyet.can} ${laSo.luuNguyet.chi} - ${laSo.luuNguyet.napAm.ten}`
                 : "—"}
             </span>

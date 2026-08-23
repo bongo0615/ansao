@@ -11,7 +11,9 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { anSao, type AnSaoInput } from "@/lib/tuvi/engine";
+import { anSao } from "@/lib/tuvi/engine";
+import { NHAN_THIEU, conThieu, hoanChinh, type BanNhap } from "@/lib/tuvi/ban-nhap";
+import { CHI } from "@/lib/tuvi/constants";
 import type { LaSo } from "@/lib/tuvi/types";
 import { OCung } from "./OCung";
 import { InputPanel } from "./InputPanel";
@@ -32,8 +34,8 @@ export type CheDoXem = "cao" | "ngang" | number;
 export function LaSoView({
   value, onChange, readOnly = false, theme = "dark", cheDo = "cao", onZoom,
 }: {
-  value: AnSaoInput;
-  onChange?: (next: AnSaoInput) => void;
+  value: BanNhap;
+  onChange?: (next: BanNhap) => void;
   readOnly?: boolean;
   theme?: "dark" | "light";
   cheDo?: CheDoXem;
@@ -43,9 +45,11 @@ export function LaSoView({
   const [zoom, setZoom] = useState(0.5);
   const boxRef = useRef<HTMLDivElement>(null);
 
-  const { laSo, loi } = useMemo(() => {
-    try { return { laSo: anSao(value) as LaSo | null, loi: null as string | null }; }
-    catch (e) { return { laSo: null, loi: (e as Error).message }; }
+  const { laSo, loi, thieu } = useMemo(() => {
+    const t = conThieu(value);
+    if (t.length > 0) return { laSo: null, loi: null, thieu: t };
+    try { return { laSo: anSao(hoanChinh(value)!) as LaSo | null, loi: null, thieu: [] }; }
+    catch (e) { return { laSo: null, loi: (e as Error).message, thieu: [] }; }
   }, [value]);
 
   useEffect(() => {
@@ -68,7 +72,7 @@ export function LaSoView({
 
   useEffect(() => { onZoom?.(zoom); }, [zoom, onZoom]);
 
-  if (loi || !laSo) {
+  if (loi) {
     return (
       <div className="rounded-xl border border-hanh-hoa/40 bg-hanh-hoa/10 p-6 text-hanh-hoa">
         <p className="font-medium">Không lập được lá số</p>
@@ -81,15 +85,34 @@ export function LaSoView({
     <div className="la-so-root" data-la-so-theme={theme} ref={boxRef}>
       <div className="la-so-wrapper">
         <div className="la-so-container" style={{ zoom }}>
-          {laSo.cung.map((c) => {
-            const [col, row] = GRID[c.index];
-            return <OCung key={c.index} c={c} col={col} row={row} />;
-          })}
+          {laSo
+            ? laSo.cung.map((c) => {
+                const [col, row] = GRID[c.index];
+                return <OCung key={c.index} c={c} col={col} row={row} />;
+              })
+            : /* Chưa đủ thông tin: giữ khung la võng, chỉ để tên chi mờ. */
+              Array.from({ length: 12 }, (_, i) => {
+                const [col, row] = GRID[i + 1];
+                return (
+                  <div key={i} className="cung" style={{ gridColumn: col, gridRow: row }}>
+                    <div className="zone-header">
+                      <span className="cung-chuc" style={{ opacity: 0.22 }}>——</span>
+                      <span className="tuan-triet-zone1" />
+                      <span className="can-chi-cung" style={{ opacity: 0.35 }}>{CHI[i]}</span>
+                    </div>
+                  </div>
+                );
+              })}
           <div className="panel-cell">
             <InputPanel laSo={laSo} value={value} onChange={onChange} readOnly={readOnly} />
           </div>
         </div>
       </div>
+      {thieu.length > 0 && (
+        <p className="no-print mt-3 text-center text-[13px] text-ink-dim">
+          Nhập {thieu.map((t) => NHAN_THIEU[t]).join(", ")} để lập lá số.
+        </p>
+      )}
     </div>
   );
 }
