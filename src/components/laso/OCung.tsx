@@ -10,6 +10,7 @@
 
 import { ZONE3_PHAI_SAT, ZONE3_TRAI } from "@/lib/tuvi/sao";
 import type { CungData, HoaIcon, Layer, SaoAn } from "@/lib/tuvi/types";
+import { VuaBeNgang } from "./VuaBeNgang";
 
 const HANH_CLASS: Record<string, string> = {
   kim: "c-kim", hoa: "c-hoa", moc: "c-moc", thuy: "c-thuy", tho: "c-tho", none: "",
@@ -116,10 +117,12 @@ export function OCung({ c, col, row }: { c: CungData; col: number; row: number }
         <div className="chinh-tinh-col">
           {chinhTinh.map((s) => (
             <div className="chinh-tinh-row" key={s.name}>
-              <span className={`chinh-tinh-name ${HANH_CLASS[s.element]}`}>
+              {/* Tên chính tinh dài (THIÊN LƯƠNG) cộng icon Tứ Hoá vượt quá bề
+                  ngang ô — tự thu nhỏ thay vì để bị cắt mất chữ. */}
+              <VuaBeNgang className={`chinh-tinh-name ${HANH_CLASS[s.element]}`}>
                 {s.hoa.length > 0 && <TuHoaIcons hoa={s.hoa} />}
                 {s.display}
-              </span>
+              </VuaBeNgang>
             </div>
           ))}
         </div>

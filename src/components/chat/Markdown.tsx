@@ -35,6 +35,7 @@ export function Markdown({ children }: { children: string }) {
   const dong = children.split("\n");
   const khoi: ReactNode[] = [];
   let danhSach: { thuTu: boolean; muc: string[] } | null = null;
+  let boQua = 0;
 
   const xaDanhSach = (k: number) => {
     if (!danhSach) return;
@@ -47,8 +48,51 @@ export function Markdown({ children }: { children: string }) {
     danhSach = null;
   };
 
+  const oBang = (l: string) =>
+    l.trim().startsWith("|") && l.trim().endsWith("|") && l.includes("|", 1);
+  /** Dòng ngăn cách kiểu `|---|:--:|` — dấu hiệu chắc chắn của bảng markdown. */
+  const laNganCach = (l: string) => /^\s*\|[\s:|-]+\|\s*$/.test(l) && l.includes("-");
+  const oCua = (l: string) =>
+    l.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+
   dong.forEach((raw, k) => {
+    if (boQua > 0) { boQua -= 1; return; }
     const l = raw.trimEnd();
+
+    // Bảng: dòng tiêu đề + dòng ngăn cách + các dòng dữ liệu liền sau.
+    if (oBang(l) && laNganCach(dong[k + 1] ?? "")) {
+      xaDanhSach(k);
+      const dau = oCua(l);
+      const than: string[][] = [];
+      let i = k + 2;
+      while (i < dong.length && oBang(dong[i])) { than.push(oCua(dong[i])); i += 1; }
+      boQua = i - k - 1;
+      khoi.push(
+        <div key={k} className="my-3 overflow-x-auto">
+          <table className="w-full border-collapse text-[13px]">
+            <thead>
+              <tr>
+                {dau.map((c, j) => (
+                  <th key={j} className="border-b border-line px-2.5 py-1.5 text-left font-semibold text-ink">
+                    {inline(c, `th${k}-${j}`)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {than.map((h, r) => (
+                <tr key={r} className="border-b border-line/60 last:border-0">
+                  {h.map((c, j) => (
+                    <td key={j} className="px-2.5 py-1.5 align-top">{inline(c, `td${k}-${r}-${j}`)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      );
+      return;
+    }
     const mHead = /^(#{1,4})\s+(.*)$/.exec(l);
     const mList = /^\s*[-*•]\s+(.*)$/.exec(l);
     const mNum = /^\s*\d+[.)]\s+(.*)$/.exec(l);

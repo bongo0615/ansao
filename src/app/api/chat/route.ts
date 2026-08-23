@@ -5,14 +5,20 @@ import { anSao } from "@/lib/tuvi/engine";
 import { laSoThanhVanBan } from "@/lib/ai/serialize";
 import { TRI_THUC } from "@/lib/ai/system-prompt";
 import { laSoSchema, rowToInput, type LaSoRow } from "@/lib/la-so-io";
+import { timNoiSinh } from "@/lib/tuvi/noi-sinh";
 import { getServerSupabase } from "@/lib/supabase/server";
-import { cheDoKhach } from "@/lib/che-do";
+import { chatMo, cheDoKhach } from "@/lib/che-do";
+import { diaChi, kiemTra } from "@/lib/gioi-han";
 
 export const runtime = "nodejs";
 // Luận giải sâu có thể chạy lâu; streaming giữ kết nối sống.
 export const maxDuration = 300;
 
 const MODEL = "claude-opus-5";
+
+/** Hạn mức cho người CHƯA đăng nhập, tính theo IP. */
+const KHACH_SO_LUOT = 15;
+const KHACH_CUA_SO_MS = 60 * 60 * 1000; // 1 giờ
 
 const bodySchema = z.object({
   /** Lá số đã lưu — server tự đọc từ DB, an toàn hơn tin client. */
@@ -39,7 +45,10 @@ export async function POST(request: NextRequest) {
   }
   const { laSoId, laSo, messages } = parsed.data;
 
-  // Ưu tiên đọc lá số từ DB theo id — RLS đảm bảo đúng chủ sở hữu.
+  // Lá số đã lưu: đọc từ DB theo id, RLS đảm bảo đúng chủ sở hữu — không tin
+  // dữ liệu client gửi lên. Lá số CHƯA lưu (đang lập ở /la-so/moi, hoặc chế độ
+  // khách): nhận thẳng input, vì đó là bát tự người dùng vừa tự nhập, không
+  // đụng tới bản ghi của ai khác.
   let input;
   if (laSoId) {
     const supabase = await getServerSupabase();
@@ -49,8 +58,39 @@ export async function POST(request: NextRequest) {
     const { data } = await supabase.from("la_so").select("*").eq("id", laSoId).maybeSingle();
     if (!data) return NextResponse.json({ error: "Không tìm thấy lá số" }, { status: 404 });
     input = rowToInput(data as LaSoRow);
-  } else if (laSo && cheDoKhach()) {
-    input = { ...laSo, timeZone: "Asia/Ho_Chi_Minh" };
+  } else if (laSo) {
+    // Lá số chưa lưu. Ai được hỏi:
+    //   - chế độ khách, hoặc cờ CHAT MỞ đang bật → cho, nhưng có hạn mức theo IP
+    //   - còn lại → phải đăng nhập
+    if (!cheDoKhach()) {
+      const supabase = await getServerSupabase();
+      const { data } = (await supabase?.auth.getUser()) ?? { data: { user: null } };
+      if (!data?.user) {
+        if (!chatMo()) {
+          return NextResponse.json(
+            { error: "Đăng nhập để trò chuyện cùng chuyên gia luận giải." },
+            { status: 401 },
+          );
+        }
+        const gh = kiemTra(`chat:${diaChi(request.headers)}`, KHACH_SO_LUOT, KHACH_CUA_SO_MS);
+        if (!gh.choPhep) {
+          const phut = Math.ceil(gh.thuLaiSauGiay / 60);
+          return NextResponse.json(
+            {
+              error: `Bạn đã dùng hết ${KHACH_SO_LUOT} lượt hỏi miễn phí trong giờ này. `
+                + `Thử lại sau ${phut} phút, hoặc đăng nhập để hỏi thoải mái.`,
+            },
+            { status: 429, headers: { "Retry-After": String(gh.thuLaiSauGiay) } },
+          );
+        }
+      }
+    }
+    input = {
+      ...laSo,
+      // Múi giờ suy từ danh mục nơi sinh, không lấy từ client và không mặc định
+      // cứng GMT+7 — sinh ở nước ngoài sẽ ra bát tự sai.
+      timeZone: timNoiSinh(laSo.noiSinh)?.timeZone ?? "Asia/Ho_Chi_Minh",
+    };
   } else {
     return NextResponse.json({ error: "Thiếu lá số" }, { status: 400 });
   }

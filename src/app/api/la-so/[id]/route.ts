@@ -28,8 +28,11 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
   }
 
   const { owner_id: _owner, ...fields } = payloadToRow(parsed.data, user.id);
+  // maybeSingle: khớp 0 dòng (lá số của người khác, hoặc đã bị xoá) trả về
+  // data = null chứ không ném lỗi — nhờ vậy đáp 404 sạch thay vì 500 kèm thông
+  // báo nội bộ của PostgREST.
   const { data, error } = await supabase
-    .from("la_so").update(fields).eq("id", id).eq("owner_id", user.id).select().single();
+    .from("la_so").update(fields).eq("id", id).eq("owner_id", user.id).select().maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Không tìm thấy lá số" }, { status: 404 });

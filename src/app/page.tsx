@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getServerSupabase } from "@/lib/supabase/server";
-import { cheDoKhach } from "@/lib/che-do";
+import { cheDoKhach, choDangKy } from "@/lib/che-do";
 import { LinkButton } from "@/components/ui";
 import { Header, Footer } from "@/components/site/Chrome";
 import { ThienBan } from "@/components/graphics/ThienBan";

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cheDoKhach } from "@/lib/che-do";
+import { choDangKy } from "@/lib/che-do";
 import { supabaseConfigured } from "@/lib/supabase/env";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
@@ -43,7 +44,9 @@ export default async function TrangDangNhap() {
           <Link href="/" className="lg:hidden"><LogoChu /></Link>
           <h1 className="mt-8 font-display text-3xl font-bold lg:mt-0">Chào mừng trở lại</h1>
           <p className="mt-2 text-sm text-ink-dim">
-            Đăng nhập để xem lại bộ sưu tập lá số của bạn.
+            {choDangKy()
+              ? "Đăng nhập để xem lại bộ sưu tập lá số của bạn."
+              : "Ứng dụng đang trong giai đoạn thử nghiệm — đăng nhập bằng tài khoản được cấp."}
           </p>
 
           {supabaseConfigured() ? (

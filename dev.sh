@@ -10,6 +10,7 @@
 #   ./dev.sh test       Chỉ chạy test (99 test: engine + nạp âm)
 #   ./dev.sh kiem-tra   Typecheck + test + build production
 #   ./dev.sh xuat       Xuất lá số ra HTML tĩnh để đối chiếu mockup
+#   ./dev.sh tai-khoan  Tạo tài khoản thử (đã xác nhận sẵn, đăng nhập được ngay)
 #   ./dev.sh dung       Dừng dev server đang chạy
 #
 # Biến môi trường:
@@ -93,6 +94,12 @@ grep -qE '^NEXT_PUBLIC_CHE_DO_KHACH=1' .env.local && CHE_DO_KHACH=1
 CO_AI=0
 grep -qE '^ANTHROPIC_API_KEY=.+' .env.local && CO_AI=1
 
+CHAT_MO=0
+grep -qE '^NEXT_PUBLIC_CHAT_MO=1' .env.local && CHAT_MO=1
+
+CHO_DANG_KY=0
+grep -qE '^NEXT_PUBLIC_CHO_DANG_KY=1' .env.local && CHO_DANG_KY=1
+
 # ── Các lệnh phụ ─────────────────────────────────────────────────────────────
 case "$LENH" in
     test)
@@ -103,8 +110,16 @@ case "$LENH" in
     kiem-tra)
         thongbao "Typecheck…";        npx tsc --noEmit && xong "Typecheck sạch."
         thongbao "Test…";             npm test
-        thongbao "Build production…"; npm run build
+        # Xoá .next trước khi build: cache cũ hay báo lỗi giả kiểu
+        # "Cannot find module for page: /_not-found" sau khi thêm route/đổi config.
+        thongbao "Build production (xoá cache trước)…"
+        rm -rf "$ROOT_DIR/.next"
+        npm run build
         xong "Tất cả đều qua."
+        exit 0
+        ;;
+    tai-khoan)
+        node scripts/tao-tai-khoan-thu.mjs "$2" "$3"
         exit 0
         ;;
     xuat)
@@ -156,6 +171,9 @@ if [ "$CHE_DO_KHACH" = "1" ]; then
 elif [ "$CO_SUPABASE" = "1" ]; then
     echo -e "  Đăng nhập      ${BLUE}http://localhost:$PORT/login${NC}"
     echo -e "  Supabase       ${GREEN}đã cấu hình${NC} — lưu được lá số"
+    if [ "$CHO_DANG_KY" = "0" ]; then
+        echo -e "  Đăng ký        ${YELLOW}TẮT${NC} — chỉ dùng tài khoản được cấp"
+    fi
 else
     echo -e "  Supabase       ${YELLOW}chưa cấu hình${NC} — không lưu được lá số"
     echo -e "  ${DIM}Điền key vào .env.local, hoặc đặt NEXT_PUBLIC_CHE_DO_KHACH=1${NC}"
@@ -163,6 +181,13 @@ else
 fi
 if [ "$CO_AI" = "1" ]; then
     echo -e "  Luận giải AI   ${GREEN}sẵn sàng${NC} (Claude Opus 5)"
+    if [ "$CHAT_MO" = "1" ]; then
+        echo -e "  Chat công khai ${YELLOW}BẬT${NC} — không cần đăng nhập, 15 lượt/giờ mỗi IP"
+        echo -e "  ${DIM}Nhớ đặt NEXT_PUBLIC_CHAT_MO=0 trước khi phát hành rộng.${NC}"
+    else
+        echo -e "  ${DIM}Luận giải yêu cầu đăng nhập. Tạo tài khoản thử:${NC}"
+        echo -e "  ${DIM}  node scripts/tao-tai-khoan-thu.mjs${NC}"
+    fi
 else
     echo -e "  Luận giải AI   ${YELLOW}tắt${NC} — thiếu ANTHROPIC_API_KEY trong .env.local"
     echo -e "  ${DIM}Lấy key tại https://console.anthropic.com/settings/keys${NC}"

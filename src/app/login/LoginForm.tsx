@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Field } from "@/components/ui";
 import { getBrowserSupabase } from "@/lib/supabase/client";
+import { choDangKy } from "@/lib/che-do";
 
 type Che = "dang_nhap" | "dang_ky" | "magic";
 
@@ -15,6 +16,7 @@ const NHAN: Record<Che, { nut: string; doi: string }> = {
 
 export function LoginForm() {
   const router = useRouter();
+  const moDangKy = choDangKy();
   const [che, setChe] = useState<Che>("dang_nhap");
   const [email, setEmail] = useState("");
   const [matKhau, setMatKhau] = useState("");
@@ -27,6 +29,9 @@ export function LoginForm() {
     if (!supabase) return;
     setDangChay(true); setTb(null);
     try {
+      if (!moDangKy && che !== "dang_nhap") {
+        throw new Error("Hiện chưa mở đăng ký tài khoản mới.");
+      }
       if (che === "magic") {
         const { error } = await supabase.auth.signInWithOtp({
           email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
@@ -78,16 +83,19 @@ export function LoginForm() {
         {dangChay ? "Đang xử lý…" : NHAN[che].nut}
       </Button>
 
-      <div className="flex flex-wrap justify-between gap-x-4 gap-y-2 pt-1 text-[13px] text-ink-faint">
-        {(Object.keys(NHAN) as Che[])
-          .filter((k) => k !== che)
-          .map((k) => (
-            <button key={k} type="button" onClick={() => { setChe(k); setTb(null); }}
-                    className="underline underline-offset-2 transition hover:text-ink-dim">
-              {NHAN[k].doi}
-            </button>
-          ))}
-      </div>
+      {/* Tắt đăng ký thì chỉ còn một lối vào — bỏ luôn thanh chuyển chế độ. */}
+      {moDangKy && (
+        <div className="flex flex-wrap justify-between gap-x-4 gap-y-2 pt-1 text-[13px] text-ink-faint">
+          {(Object.keys(NHAN) as Che[])
+            .filter((k) => k !== che)
+            .map((k) => (
+              <button key={k} type="button" onClick={() => { setChe(k); setTb(null); }}
+                      className="underline underline-offset-2 transition hover:text-ink-dim">
+                {NHAN[k].doi}
+              </button>
+            ))}
+        </div>
+      )}
     </form>
   );
 }

@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { KhungChat } from "@/components/chat/KhungChat";
 import { luuCucBo, xoaCucBo } from "@/lib/luu-tru-cuc-bo";
 import type { AnSaoInput } from "@/lib/tuvi/engine";
+import { chatMo } from "@/lib/che-do";
 import type { Tin } from "@/components/ui/ThongBao";
 import { LaSoView, type CheDoXem } from "./LaSoView";
 import { ThanhCongCu } from "./ThanhCongCu";
@@ -110,7 +111,13 @@ export function LaSoWorkspace({ banDau, id, noiLuu }: {
   if (noiLuu === "khong") {
     tin.push({
       id: "chua-luu", muc: "canh_bao", tieuDe: "Lá số chưa được lưu",
-      than: (
+      than: chatMo() ? (
+        <>
+          Bạn vẫn hỏi được chuyên gia.{" "}
+          <a href="/login" className="text-cyan underline underline-offset-2">Đăng nhập</a>
+          {" "}để lưu lá số lại cho lần sau.
+        </>
+      ) : (
         <>
           <a href="/login" className="text-cyan underline underline-offset-2">Đăng nhập</a>
           {" "}để lưu lá số này và hỏi chuyên gia luận giải.
@@ -148,9 +155,13 @@ export function LaSoWorkspace({ banDau, id, noiLuu }: {
         <div className={`no-print ${tab === "luan-giai" ? "" : "hidden xl:block"}
                         xl:sticky xl:top-[64px] xl:h-[calc(100vh-76px)]`}>
           <KhungChat
-            laSoId={noiLuu === "supabase" ? id : undefined}
-            laSo={noiLuu === "supabase" ? undefined : value}
+            {...(noiLuu === "supabase" && id
+              // Đã lưu trên máy chủ: chỉ gửi id, để server tự đọc bản chuẩn.
+              ? { laSoId: id }
+              // Chưa lưu (đang lập mới) hoặc lưu cục bộ: gửi thẳng lá số.
+              : { laSo: value })}
             tenDuongSo={ten}
+            khoa={noiLuu === "khong" && !chatMo()}
           />
         </div>
       </div>
