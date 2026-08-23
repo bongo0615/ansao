@@ -16,6 +16,14 @@ export const maxDuration = 300;
 
 const MODEL = "claude-opus-5";
 
+/**
+ * Trần token cho một lượt trả lời. `max_tokens` bao gồm CẢ phần suy luận nội bộ,
+ * nên đặt quá sát sẽ cắt cụt giữa câu. 4000 đủ rộng để câu trả lời kết thúc tự
+ * nhiên; việc giữ cho ngắn là do prompt (mục "ĐỘ DÀI — QUY TẮC CỨNG") lo, không
+ * phải do cắt cứng ở đây.
+ */
+const TRAN_TOKEN = 4000;
+
 /** Hạn mức cho người CHƯA đăng nhập, tính theo IP. */
 const KHACH_SO_LUOT = 15;
 const KHACH_CUA_SO_MS = 60 * 60 * 1000; // 1 giờ
@@ -108,9 +116,11 @@ export async function POST(request: NextRequest) {
   // đứng trước và được cache; khối lá số đổi theo từng người nên đứng sau.
   const stream = client.messages.stream({
     model: MODEL,
-    max_tokens: 16000,
+    max_tokens: TRAN_TOKEN,
     thinking: { type: "adaptive" },
-    output_config: { effort: "high" },
+    // effort thấp hơn → suy luận gọn, ít lời dẫn, câu trả lời súc tích hơn.
+    // "medium" giữ được chất lượng luận giải mà không dài dòng như "high".
+    output_config: { effort: "medium" },
     system: [
       { type: "text", text: TRI_THUC, cache_control: { type: "ephemeral" } },
       { type: "text", text: `# LÁ SỐ ĐANG XEM\n\n${vanBanLaSo}` },
@@ -132,6 +142,9 @@ export async function POST(request: NextRequest) {
         const cuoi = await stream.finalMessage();
         if (cuoi.stop_reason === "refusal") {
           gui({ t: "error", v: "Nội dung này tôi không luận giải được. Bạn thử hỏi cách khác nhé." });
+        } else if (cuoi.stop_reason === "max_tokens") {
+          // Chạm trần giữa chừng: nói rõ thay vì để câu trả lời cụt lủn khó hiểu.
+          gui({ t: "error", v: "Câu trả lời dài quá mức cho phép nên bị cắt. Bạn thử hỏi hẹp lại một chủ đề nhé." });
         }
         gui({ t: "done" });
       } catch (e) {

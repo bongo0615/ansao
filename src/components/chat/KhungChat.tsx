@@ -9,7 +9,8 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { GOI_Y_CAU_HOI } from "@/lib/ai/system-prompt";
+import { GOI_Y_CAU_HOI, NHOM_CAU_HOI } from "@/lib/ai/system-prompt";
+import { Menu } from "@/components/ui/Menu";
 import type { AnSaoInput } from "@/lib/tuvi/engine";
 import { Markdown } from "./Markdown";
 
@@ -249,9 +250,57 @@ export function KhungChat({
             className="border-t border-line p-3"
           >
             <div
-              className="flex items-end gap-2 rounded-xl border border-line bg-white/[0.04] px-3 py-2
+              className="flex items-end gap-2 rounded-xl border border-line bg-white/[0.04] px-2.5 py-2
                         transition focus-within:border-cyan/40"
             >
+              {/* Hỏi nhanh — luôn sẵn, kể cả khi hội thoại đã bắt đầu */}
+              <Menu
+                huong="len"
+                canPhai={false}
+                nut={(mo) => (
+                  <span
+                    title="Câu hỏi gợi ý"
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line transition hover:bg-white/[0.07] hover:text-ink ${
+                      mo ? "bg-white/[0.07] text-ink" : "text-ink-dim"
+                    }`}
+                  >
+                    <svg
+                      width="15" height="15" viewBox="0 0 16 16" fill="none"
+                      stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden
+                    >
+                      <circle cx="8" cy="8" r="6.2" />
+                      <path d="M5.9 6a2.1 2.1 0 113 1.9c-.6.3-.9.8-.9 1.4v.3" />
+                      <circle cx="8" cy="12.2" r=".85" fill="currentColor" stroke="none" />
+                    </svg>
+                  </span>
+                )}
+              >
+                {(dong) => (
+                  <div className="max-h-[min(60vh,420px)] w-[286px] overflow-y-auto">
+                    {NHOM_CAU_HOI.map((g) => (
+                      <div key={g.nhom} className="mb-1 last:mb-0">
+                        <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-gold">
+                          {g.nhom}
+                        </p>
+                        {g.cau.map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            disabled={dangChay}
+                            onClick={() => {
+                              dong();
+                              gui(c);
+                            }}
+                            className="block w-full rounded-lg px-3 py-1.5 text-left text-[13px] leading-snug text-ink-dim transition hover:bg-white/[0.07] hover:text-ink disabled:opacity-40"
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Menu>
               <textarea
                 value={nhap}
                 onChange={(e) => setNhap(e.target.value)}

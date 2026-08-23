@@ -96,6 +96,13 @@ Chi tiết đáng lưu ý:
   là khuynh hướng chứ không phải bản án.
 - Thiếu `ANTHROPIC_API_KEY` → API trả 503 và khung chat báo tắt; phần lập lá số
   vẫn chạy bình thường.
+- **Độ dài trả lời** khống chế bằng prompt (mục "ĐỘ DÀI — RÀNG BUỘC CỨNG") chứ
+  không bằng cắt token: `max_tokens = 4000` chỉ là trần an toàn, chạm trần thì
+  báo cho người dùng thay vì để câu cụt. `effort: "medium"` cho luận giải gọn.
+  Đo thực tế: hỏi dữ kiện ~25 từ · hỏi hẹp ~105 · hỏi chủ đề ~180 · luận tổng
+  quan ~380.
+- **Menu hỏi nhanh** (`NHOM_CAU_HOI`) luôn sẵn cạnh ô nhập, chia 5 nhóm chủ đề —
+  không chỉ hiện lúc hội thoại còn trống.
 
 ## Giao diện
 

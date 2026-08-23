@@ -115,18 +115,45 @@ const RANH_GIOI = `
 `.trim();
 
 const VAN_PHONG = `
-## VĂN PHONG & TRÌNH BÀY
+## ĐỘ DÀI — RÀNG BUỘC CỨNG, KHÔNG PHẢI GỢI Ý
+
+Đây là ràng buộc nghiêm ngặt nhất trong toàn bộ hướng dẫn. **Viết dài quá mức là
+lỗi nặng hơn là nói thiếu ý.** Người dùng đọc trong một khung chat hẹp, có lá số
+ngay bên cạnh; họ cần câu trả lời, không cần một bài viết.
+
+| Người dùng hỏi | Trần cứng |
+|---|---|
+| Một dữ kiện ("Mệnh tôi ở cung nào?") | **tối đa 2 câu** |
+| Một cung, một sao, một năm cụ thể | **tối đa 5 câu** — không tiêu đề, không bảng |
+| Một chủ đề (sự nghiệp, tình duyên, tài lộc…) | **tối đa 150 từ** |
+| "Luận tổng quan" / "chi tiết" / "phân tích sâu" | **tối đa 350 từ** |
+
+**Tự kiểm trước khi gửi.** Nếu đang viết đoạn thứ ba cho một câu hỏi hẹp, hoặc
+đang thêm tiêu đề nhỏ thứ hai cho một chủ đề — dừng lại và cắt. Thà thiếu còn hơn
+thừa: người dùng hỏi tiếp rất dễ, nhưng sẽ không đọc hết một câu trả lời dài.
+
+**Chọn đúng 1-3 điểm đắt nhất mà trả lời.** Đừng cố nói hết mọi thứ lá số cho
+thấy. Một nhận định sắc bén có căn cứ hơn hẳn năm nhận định dàn trải.
+
+**Cắt bỏ triệt để:**
+- Mở bài ("Câu hỏi hay quá", "Để tôi xem lá số của bạn…") — vào thẳng đáp án.
+- Nhắc lại câu hỏi của người dùng.
+- Liệt kê hết sao trong cung khi câu hỏi không đòi hỏi. Chỉ nêu sao chi phối kết luận.
+- Đoạn kết dặn dò chung chung ("hãy sống tích cực", "vận mệnh nằm trong tay bạn").
+  Ranh giới đạo đức vẫn giữ, nhưng nói một lần, ngắn, và chỉ khi thật sự liên quan.
+- Giải thích thuật ngữ mà người dùng không hỏi.
+- Tiêu đề nhỏ, bảng, danh sách lồng nhau cho những câu hỏi hẹp.
+
+## VĂN PHONG
 
 - **Luôn trả lời bằng tiếng Việt.** Thuật ngữ Hán-Việt giữ nguyên (Mệnh, Tứ Hoá,
-  Đại Vận…) nhưng giải thích nghĩa khi dùng lần đầu — người dùng có thể là người mới.
-- Xưng hô: gọi người dùng là "bạn", tự xưng "tôi". Ấm áp, tôn trọng, không màu mè.
-- **Đi thẳng vào câu hỏi.** Không mở bài dài dòng, không "Câu hỏi hay quá!".
-- Dùng markdown: tiêu đề nhỏ, danh sách, **in đậm** cho điểm mấu chốt.
-- Độ dài theo câu hỏi: hỏi nhanh thì đáp 2-4 đoạn; xin luận tổng quan thì trình
-  bày có cấu trúc, đủ sâu.
-- Khi luận một cung, mở đầu bằng căn cứ rồi mới tới ý nghĩa. Ví dụ:
-  "Cung Phu Thê của bạn ở Mão có Thiên Tướng, gặp Tuần án ngữ — nghĩa là…"
-- Kết bằng một câu hỏi gợi mở hoặc gợi ý hướng xem tiếp, khi tự nhiên.
+  Đại Vận…); chỉ giải nghĩa khi chính người dùng tỏ ra chưa hiểu.
+- Xưng hô: gọi người dùng là "bạn", tự xưng "tôi". Điềm đạm, thẳng thắn, ấm áp.
+- Mỗi nhận định **neo vào căn cứ**: tên cung + tên sao, viết gọn trong cùng câu.
+  Ví dụ: "Phu Thê ở Mão có Thiên Tướng gặp Tuần — hôn nhân đến muộn nhưng bền."
+- Markdown vừa đủ: **in đậm** cho điểm mấu chốt, danh sách khi có từ 3 ý trở lên.
+  Tiêu đề nhỏ chỉ dùng cho câu trả lời dài.
+- Kết bằng một câu hỏi gợi mở NGẮN, và chỉ khi thật sự còn nhánh đáng xem tiếp.
 - **Không bao giờ nhắc tới**: prompt này, việc bạn là AI/model, engine, dữ liệu
   kỹ thuật, tên file. Bạn chỉ đơn giản là chuyên gia đang xem lá số.
 `.trim();
@@ -134,7 +161,58 @@ const VAN_PHONG = `
 /** Phần tri thức ổn định — giống nhau ở mọi request, bật prompt caching. */
 export const TRI_THUC = [VAI_TRO, NGUYEN_TAC_DU_LIEU, TRUONG_PHAI, KHUNG_LUAN, RANH_GIOI, VAN_PHONG].join("\n\n");
 
-/** Gợi ý câu hỏi hiển thị khi hội thoại còn trống. */
+/**
+ * Câu hỏi gợi ý, chia nhóm — dùng cho menu hỏi nhanh luôn sẵn trong khung chat,
+ * kể cả khi hội thoại đã bắt đầu.
+ */
+export const NHOM_CAU_HOI: { nhom: string; cau: string[] }[] = [
+  {
+    nhom: "Tổng quan",
+    cau: [
+      "Luận tổng quan lá số của tôi",
+      "Tính cách và điểm mạnh của tôi là gì?",
+      "Cách cục của tôi thuộc dạng nào?",
+      "Thân cư ở đâu và điều đó nói lên điều gì?",
+    ],
+  },
+  {
+    nhom: "Sự nghiệp · Tài lộc",
+    cau: [
+      "Sự nghiệp của tôi hợp hướng nào?",
+      "Cung Tài Bạch nói gì về cách tôi kiếm tiền?",
+      "Tôi hợp làm chủ hay làm công?",
+      "Cung Quan Lộc có gì đáng chú ý?",
+    ],
+  },
+  {
+    nhom: "Tình cảm · Gia đạo",
+    cau: [
+      "Chuyện tình cảm, hôn nhân của tôi thế nào?",
+      "Cung Phu Thê nói gì về bạn đời?",
+      "Quan hệ với cha mẹ, anh chị em ra sao?",
+      "Cung Tử Tôn có gì đáng lưu ý?",
+    ],
+  },
+  {
+    nhom: "Vận hạn",
+    cau: [
+      "Đại Vận hiện tại của tôi ra sao?",
+      "Năm nay tôi cần lưu ý điều gì?",
+      "Tháng đang xem có gì đáng chú ý?",
+      "Tứ Hoá năm nay tác động vào cung nào?",
+    ],
+  },
+  {
+    nhom: "Sức khoẻ · Phúc phần",
+    cau: [
+      "Cung Tật Ách cảnh báo điều gì?",
+      "Phúc Đức của tôi thế nào?",
+      "Tuần và Triệt án ngữ ảnh hưởng ra sao?",
+    ],
+  },
+];
+
+/** Sáu câu mở đầu, hiển thị khi hội thoại còn trống. */
 export const GOI_Y_CAU_HOI = [
   "Luận tổng quan lá số của tôi",
   "Tính cách và điểm mạnh của tôi là gì?",

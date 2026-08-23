@@ -4,10 +4,12 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-export function Menu({ nut, children, canPhai = true }: {
+export function Menu({ nut, children, canPhai = true, huong = "xuong" }: {
   nut: (mo: boolean) => ReactNode;
   children: (dong: () => void) => ReactNode;
   canPhai?: boolean;
+  /** Nút nằm sát đáy màn thì mở lên trên cho khỏi tràn ra ngoài. */
+  huong?: "xuong" | "len";
 }) {
   const [mo, setMo] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -36,8 +38,9 @@ export function Menu({ nut, children, canPhai = true }: {
           role="menu"
           // Nền ĐẶC: menu nổi trên lá số dày chữ, mọi độ trong suốt đều làm khó đọc.
           style={{ backgroundColor: "#20202c" }}
-          className={`absolute top-full z-50 mt-1.5 min-w-[210px] overflow-hidden rounded-xl
+          className={`absolute z-50 min-w-[210px] overflow-hidden rounded-xl
                       border border-white/15 p-1 shadow-menu
+                      ${huong === "len" ? "bottom-full mb-1.5" : "top-full mt-1.5"}
                       ${canPhai ? "right-0" : "left-0"}`}
         >
           {children(() => setMo(false))}
