@@ -487,12 +487,19 @@
   flex: 1;
   margin: 13px 11px;
   /* v9.1: bỏ toàn bộ border/zone line trong panel — trình bày sạch, tách section bằng khoảng trắng */
-  padding: 24px 28px;
+  padding: 16px 24px;
   display: flex;
   flex-direction: column;
   font-family: var(--font-body);
   font-size: 18px;
   background: var(--bg-primary);
+}
+
+.input-panel-noi-dung {
+  flex: 1;
+  min-height: 0;
+  /* Tràn thì thu nhỏ (JS), không bao giờ để cắt cụt âm thầm. */
+  overflow: hidden;
 }
 
 .user-header .field-name {
@@ -519,18 +526,20 @@
   text-transform: uppercase;
   text-align: center;
   padding: 0 0 4px;
-  margin-bottom: 28px;
+  margin-bottom: 14px;
   color: var(--text-primary);
 }
 
 .input-section {
-  margin-bottom: 16px;
+  margin-bottom: 9px;
 }
 
 .input-label {
   color: var(--text-primary);
   font-size: 18px;
-  margin-bottom: 4px;
+  /* Khoá line-height: 'normal' phụ thuộc metric font, đo được mới nén chắc. */
+  line-height: 1.35;
+  margin-bottom: 3px;
 }
 
 .input-value-row {
@@ -554,7 +563,7 @@
 
 /* Box dashed bo góc 10px quanh khối Birth Data (mới v9) */
 .birth-data-box {
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 .birth-data-box .input-section:last-child {
   margin-bottom: 0;
@@ -562,14 +571,15 @@
 
 /* MỆNH/CỤC Box */
 .menh-cuc-box {
-  margin: 24px 0;
+  margin: 14px 0;
 }
 
 .menh-cuc-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 8px;
+  line-height: 1.35;
+  margin-bottom: 6px;
 }
 
 .menh-cuc-row:last-child {
@@ -588,22 +598,30 @@
 }
 
 /* Đại Vận section */
+/* [Nén dọc — hệ quả của quyết định 30/07 rút ô cung 480px → 456px]
+   Vùng Input Panel co từ 934px xuống 886px nhưng nhịp dọc trong mockup vẫn giữ
+   theo khổ cũ, nên hai dòng cuối (Tháng xem / Ngày xem) bị cắt. Các số dưới đây
+   đã nén lại để nội dung vừa khung, còn dư ~35px. Kèm theo đó `InputPanel` có
+   cơ chế tự thu nhỏ nếu vẫn tràn (font thay thế, tên nơi sinh dài…) — xem
+   `.input-panel-noi-dung`. */
 .dai-van-section {
-  padding-top: 4px;
-  margin-top: 24px;
+  padding-top: 2px;
+  margin-top: 14px;
 }
 
 .dai-van-label {
   color: var(--text-primary);
   font-size: 18px;
-  margin-bottom: 8px;
+  line-height: 1.35;
+  margin-bottom: 6px;
 }
 
 .dai-van-row {
   display: grid;
   grid-template-columns: 120px 100px 1fr;
   align-items: baseline;
-  margin-bottom: 16px;
+  line-height: 1.35;
+  margin-bottom: 10px;
 }
 
 .dai-van-can-chi {
@@ -635,7 +653,8 @@
   display: grid;
   grid-template-columns: 120px 100px 1fr;
   align-items: baseline;
-  margin-bottom: 12px;
+  line-height: 1.35;
+  margin-bottom: 8px;
 }
 
 .luu-nien-label {
